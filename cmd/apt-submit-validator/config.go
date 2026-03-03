@@ -1,0 +1,80 @@
+package main
+
+import (
+	"log"
+	"os"
+	"strconv"
+)
+
+// ServiceConfig defines all the service configuration parameters
+type ServiceConfig struct {
+	// queue definitions
+	InQueueName   string // SQS queue name to monitor for message
+	PollTimeOut   int32  // the SQS queue timeout (in seconds)
+	HeartbeatTime int32  // the SQS queue heartbeat time (in seconds)
+
+	// database configuration
+	DbHost     string // database host
+	DbPort     int    // database port
+	DbName     string // database name
+	DbUser     string // database user
+	DbPassword string // database password
+}
+
+func ensureSet(env string) string {
+	val, set := os.LookupEnv(env)
+
+	if set == false {
+		log.Printf("FATAL ERROR: environment variable not set: [%s]", env)
+		os.Exit(1)
+	}
+
+	return val
+}
+
+func ensureSetAndNonEmpty(env string) string {
+	val := ensureSet(env)
+
+	if val == "" {
+		log.Printf("FATAL ERROR: environment variable not set: [%s]", env)
+		os.Exit(1)
+	}
+
+	return val
+}
+
+func envToInt(env string) int {
+
+	number := ensureSetAndNonEmpty(env)
+	n, err := strconv.Atoi(number)
+	fatalIfError(err)
+	return n
+}
+
+// LoadConfiguration will load the service configuration from env/cmdline
+// and return a pointer to it. Any failures are fatal.
+func LoadConfiguration() *ServiceConfig {
+
+	var cfg ServiceConfig
+
+	cfg.InQueueName = ensureSetAndNonEmpty("NOTIFY_IN_QUEUE")
+	cfg.PollTimeOut = int32(envToInt("NOTIFY_QUEUE_POLL_TIMEOUT"))
+	cfg.HeartbeatTime = int32(envToInt("NOTIFY_QUEUE_HEARTBEAT_TIME"))
+	cfg.DbHost = ensureSetAndNonEmpty("DB_HOST")
+	cfg.DbPort = envToInt("DB_PORT")
+	cfg.DbName = ensureSetAndNonEmpty("DB_NAME")
+	cfg.DbUser = ensureSetAndNonEmpty("DB_USER")
+	cfg.DbPassword = ensureSetAndNonEmpty("DB_PASSWORD")
+
+	log.Printf("[CONFIG] InQueueName     = [%s]", cfg.InQueueName)
+	log.Printf("[CONFIG] PollTimeOut     = [%d]", cfg.PollTimeOut)
+	log.Printf("[CONFIG] HeartbeatTime   = [%d]", cfg.HeartbeatTime)
+
+	log.Printf("[CONFIG] DbHost          = [%s]\n", cfg.DbHost)
+	log.Printf("[CONFIG] DbPort          = [%d]\n", cfg.DbPort)
+	log.Printf("[CONFIG] DbName          = [%s]\n", cfg.DbName)
+	log.Printf("[CONFIG] DbUser          = [%s]\n", cfg.DbUser)
+	log.Printf("[CONFIG] DbPassword      = [REDACTED]\n")
+
+	return &cfg
+}
