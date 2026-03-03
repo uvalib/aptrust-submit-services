@@ -23,6 +23,7 @@ linux-bin:
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $(GOBUILD) -a -installsuffix cgo -o bin/$(BINNAME).linux *.go
 
 common:
+	-ln -s $(COMMON)/env.go . 2> /dev/null || true
 	-ln -s $(COMMON)/helpers.go . 2> /dev/null || true
 	-ln -s $(COMMON)/main-cmdline.go . 2> /dev/null || true
 	-ln -s $(COMMON)/sqs.go . 2> /dev/null || true
