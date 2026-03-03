@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"time"
 
@@ -32,16 +31,15 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 
 	log.Printf("INFO: EVENT %s / %s", busEvent.String(), wf.String())
 
-	// create the event bus client
-	eventBus, _ := NewEventBus(cfg.BusName, cfg.BusEventSource)
-
 	log.Printf("DEBUG: worker doing lots of validate stuff")
 	time.Sleep(60 * time.Second)
 
 	// we are done, publish the appropriate event and terminate
+	eventBus, _ := NewEventBus(cfg.BusName, cfg.BusEventSource)
 	_ = publishWorkflowEvent(eventBus, uvaaptsbus.EventSubmissionReconcile, busEvent.ClientId, wf.SubmissionId, wf.BagId)
+
 	duration := time.Since(start)
-	fmt.Printf("INFO: worker terminating (elapsed %0.2f seconds)\n", duration.Seconds())
+	log.Printf("INFO: worker terminating (elapsed %0.2f seconds)\n", duration.Seconds())
 	done <- true
 }
 

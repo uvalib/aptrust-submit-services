@@ -35,8 +35,8 @@ func LoadConfiguration() *ServiceConfig {
 	cfg.HeartbeatTime = int32(envToInt("NOTIFY_QUEUE_HEARTBEAT_TIME"))
 
 	// event bus definitions
-	cfg.BusName = ensureSetAndNonEmpty("EVENT_BUS_NAME")
-	cfg.BusEventSource = ensureSetAndNonEmpty("EVENT_SRC_NAME")
+	cfg.BusName = envWithDefault("EVENT_BUS_NAME", "")
+	cfg.BusEventSource = envWithDefault("EVENT_SRC_NAME", "")
 
 	// database definitions
 	cfg.DbHost = ensureSetAndNonEmpty("DB_HOST")
