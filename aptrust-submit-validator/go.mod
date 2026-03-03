@@ -5,7 +5,7 @@ go 1.26.0
 require (
 	github.com/aws/aws-sdk-go-v2/config v1.32.10
 	github.com/aws/aws-sdk-go-v2/service/sqs v1.42.22
-	github.com/uvalib/apts-bus-definitions/uvaaptsbus v0.0.0-20260302140828-e8d73da08a4c
+	github.com/uvalib/apts-bus-definitions/uvaaptsbus v0.0.0-20260303144802-713a35019895
 )
 
 require (

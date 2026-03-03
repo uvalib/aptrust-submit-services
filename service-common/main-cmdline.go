@@ -67,15 +67,6 @@ func main() {
 				goto START
 			}
 
-			// ensure this is the type of event we want to process
-			switch ev.EventName {
-			case "workflow.submission.validate":
-			default:
-				log.Printf("ERROR: unexpected event type (%s), ignoring", ev.EventName)
-				// try again
-				goto START
-			}
-
 			// start the worker...
 			go worker(doneChan, cfg, ev)
 

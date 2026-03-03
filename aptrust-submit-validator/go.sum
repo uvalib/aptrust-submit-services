@@ -32,3 +32,5 @@ github.com/aws/smithy-go v1.24.2 h1:FzA3bu/nt/vDvmnkg+R8Xl46gmzEDam6mZ1hzmwXFng=
 github.com/aws/smithy-go v1.24.2/go.mod h1:YE2RhdIuDbA5E5bTdciG9KrW3+TiEONeUWCqxX9i1Fc=
 github.com/uvalib/apts-bus-definitions/uvaaptsbus v0.0.0-20260302140828-e8d73da08a4c h1:KoiupCfh6UU/eay8j1AopEC+zbSKvZ0t+RPHsfjcUng=
 github.com/uvalib/apts-bus-definitions/uvaaptsbus v0.0.0-20260302140828-e8d73da08a4c/go.mod h1:IQVu8rhxNWTwFaEEAludxtjAaFwz4z9oeXww2ZxGJ3M=
+github.com/uvalib/apts-bus-definitions/uvaaptsbus v0.0.0-20260303144802-713a35019895 h1:2r1n9GbHdHOv7j4L0gxp3nR5tUrlEj3h3kX65Rqn+vU=
+github.com/uvalib/apts-bus-definitions/uvaaptsbus v0.0.0-20260303144802-713a35019895/go.mod h1:IQVu8rhxNWTwFaEEAludxtjAaFwz4z9oeXww2ZxGJ3M=
