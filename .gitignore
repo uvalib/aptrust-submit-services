@@ -1,6 +1,14 @@
 .idea
-tmp
+*/tmp
 env.*
-bin
+*/bin
 package/scripts/build.ksh
 package/scripts/shell.ksh
+
+# ignore common/shared files
+helpers.go
+sqs.go
+version.go
+
+# dont ignore common directory
+!service-common/*.go

@@ -50,7 +50,7 @@ func main() {
 		if msg != nil {
 			log.Printf("INFO: received a messages")
 
-			// convert to an eventbus event
+			// convert to an event bridge event
 			var event Event
 			err := json.Unmarshal([]byte(*msg.Body), &event)
 			if err != nil {
@@ -76,26 +76,21 @@ func main() {
 				goto START
 			}
 
-			// make the workflow event
-			wf, err := uvaaptsbus.MakeWorkflowEvent(ev.Detail)
-			if err != nil {
-				log.Printf("ERROR: unmarshaling workflow event (%s)", err.Error())
-				continue
-			}
-
-			log.Printf("INFO: EVENT %s / %s", ev.String(), wf.String())
-
 			// start the worker...
-			go worker(doneChan, cfg)
+			go worker(doneChan, cfg, ev)
 
 			// wait for the worker to complete, issue regular heartbeats
 			for {
 				select {
-				case <-doneChan:
-					log.Printf("INFO: worker done, deleting message")
-					err = deleteMessage(sqsClient, queueUrl, msg.ReceiptHandle)
-					if err != nil {
-						log.Printf("ERROR: deleting message (%s)", err.Error())
+				case val := <-doneChan:
+					if val == true {
+						log.Printf("INFO: worker done, deleting message")
+						err = deleteMessage(sqsClient, queueUrl, msg.ReceiptHandle)
+						if err != nil {
+							log.Printf("ERROR: deleting message (%s)", err.Error())
+						}
+					} else {
+						log.Printf("WARNING: worker terminates unexpectedly")
 					}
 					goto START
 				case <-time.After(time.Duration(cfg.HeartbeatTime) * time.Second): // Timeout after 2 seconds

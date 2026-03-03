@@ -8,18 +8,24 @@ GOFMT = $(GOCMD) fmt
 GOVET = $(GOCMD) vet
 PACKAGENAME = aptrust-submit-validator
 BINNAME = $(PACKAGENAME)
+COMMON = ../service-common
 
-build: darwin 
+build: common darwin-bin
 
-all: darwin linux
+linux: common linux-bin
 
-darwin:
-	#GOOS=darwin GOARCH=amd64 $(GOBUILD) -a -o bin/$(BINNAME).darwin *.go
-	# see https://github.com/golang/go/issues/41572
+all: common darwin-bin linux-bin
+
+darwin-bin:
 	GOOS=darwin GOARCH=amd64 $(GOBUILD) -a -race -o bin/$(BINNAME).darwin *.go
 
-linux:
+linux-bin:
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $(GOBUILD) -a -installsuffix cgo -o bin/$(BINNAME).linux *.go
+
+common:
+	-ln -s $(COMMON)/helpers.go . 2> /dev/null || true
+	-ln -s $(COMMON)/sqs.go . 2> /dev/null || true
+	-ln -s $(COMMON)/version.go . 2> /dev/null || true
 
 clean:
 	$(GOCLEAN) .
