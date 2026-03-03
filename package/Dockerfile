@@ -34,15 +34,15 @@ RUN mkdir -p ${APP_HOME} ${APP_HOME}/bin ${APP_HOME}/scripts
 RUN chown -R webservice ${APP_HOME} && chgrp -R webservice ${APP_HOME}
 
 # run command
-CMD ["scripts/entry.sh"]
+#CMD ["scripts/entry.sh"]
 
 # Move in necessary assets
 COPY package/data/container_bash_profile /home/webservice/.profile
-COPY package/scripts/entry.sh ${APP_HOME}/scripts/entry.sh
+COPY package/scripts/validator-entry.ksh ${APP_HOME}/scripts/validator-entry.ksh
 COPY --from=builder /build/aptrust-submit-validator/bin/aptrust-submit-validator.linux ${APP_HOME}/bin/aptrust-submit-validator
 
 # Ensure permissions are correct
-RUN chown webservice:webservice /home/webservice/.profile ${APP_HOME}/scripts/entry.sh ${APP_HOME}/bin/aptrust-submit-validator && chmod 755 /home/webservice/.profile ${APP_HOME}/scripts/entry.sh ${APP_HOME}/bin/aptrust-submit-validator
+RUN chown webservice:webservice /home/webservice/.profile ${APP_HOME}/scripts/validator-entry.ksh ${APP_HOME}/bin/aptrust-submit-validator && chmod 755 /home/webservice/.profile ${APP_HOME}/scripts/validator-entry.ksh ${APP_HOME}/bin/aptrust-submit-validator
 
 # Add the build tag
 ARG BUILD_TAG

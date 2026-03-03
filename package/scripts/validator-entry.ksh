@@ -1,6 +1,6 @@
 # run application
 
-./bin/sqs-email-notify
+./bin/aptrust-submit-validator
 
 #
 # end of file
