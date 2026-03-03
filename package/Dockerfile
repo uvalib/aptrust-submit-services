@@ -7,6 +7,7 @@ FROM public.ecr.aws/docker/library/golang:1.26.0-alpine3.23 AS builder
 RUN apk update && apk upgrade && apk add --no-cache make
 
 WORKDIR /build
+COPY service-common ./service-common
 COPY aptrust-submit-validator ./aptrust-submit-validator
 RUN cd aptrust-submit-validator; make linux
 
