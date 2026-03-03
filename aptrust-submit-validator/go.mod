@@ -1,4 +1,4 @@
-module github.com/uvalib/apt-submit-validator
+module github.com/uvalib/aptrust-submit-validator
 
 go 1.26.0
 
