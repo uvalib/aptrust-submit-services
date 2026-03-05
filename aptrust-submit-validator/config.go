@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 )
 
@@ -10,6 +11,9 @@ type ServiceConfig struct {
 	InQueueName   string // SQS queue name to monitor for message
 	PollTimeOut   int32  // the SQS queue timeout (in seconds)
 	HeartbeatTime int32  // the SQS queue heartbeat time (in seconds)
+
+	// ingest details
+	InboundBucket string // the inbound bucket name
 
 	// event bus definitions
 	BusName        string // the event bus name
@@ -34,6 +38,9 @@ func LoadConfiguration() *ServiceConfig {
 	cfg.PollTimeOut = int32(envToInt("NOTIFY_QUEUE_POLL_TIMEOUT"))
 	cfg.HeartbeatTime = int32(envToInt("NOTIFY_QUEUE_HEARTBEAT_TIME"))
 
+	// ingest details
+	cfg.InboundBucket = ensureSetAndNonEmpty("INBOUND_BUCKET")
+
 	// event bus definitions
 	cfg.BusName = envWithDefault("EVENT_BUS_NAME", "")
 	cfg.BusEventSource = envWithDefault("EVENT_SRC_NAME", "")
@@ -49,6 +56,9 @@ func LoadConfiguration() *ServiceConfig {
 	log.Printf("[CONFIG] InQueueName     = [%s]", cfg.InQueueName)
 	log.Printf("[CONFIG] PollTimeOut     = [%d]", cfg.PollTimeOut)
 	log.Printf("[CONFIG] HeartbeatTime   = [%d]", cfg.HeartbeatTime)
+
+	// ingest details
+	fmt.Printf("[CONFIG] InboundBucket   = [%s]\n", cfg.InboundBucket)
 
 	// event bus definitions
 	log.Printf("[CONFIG] BusName         = [%s]", cfg.BusName)

@@ -4,7 +4,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/uvalib/apts-bus-definitions/uvaaptsbus"
+	"github.com/uvalib/aptrust-submit-bus-definitions/uvaaptsbus"
 )
 
 func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEvent) {
@@ -31,11 +31,13 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 
 	log.Printf("INFO: EVENT %s / %s", busEvent.String(), wf.String())
 
+	// create our event bus client
+	eventBus, _ := NewEventBus(cfg.BusName, cfg.BusEventSource)
+
 	log.Printf("DEBUG: worker doing lots of validate stuff")
 	time.Sleep(60 * time.Second)
 
 	// we are done, publish the appropriate event and terminate
-	eventBus, _ := NewEventBus(cfg.BusName, cfg.BusEventSource)
 	_ = publishWorkflowEvent(eventBus, uvaaptsbus.EventSubmissionReconcile, busEvent.ClientId, wf.SubmissionId, wf.BagId)
 
 	duration := time.Since(start)

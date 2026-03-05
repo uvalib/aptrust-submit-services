@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"log"
 
-	"github.com/uvalib/apts-bus-definitions/uvaaptsbus"
+	"github.com/uvalib/aptrust-submit-bus-definitions/uvaaptsbus"
 )
 
 func NewEventBus(eventBus string, eventSource string) (uvaaptsbus.UvaBus, error) {

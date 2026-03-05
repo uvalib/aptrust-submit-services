@@ -6,8 +6,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/uvalib/apts-bus-definitions/uvaaptsbus"
-	//"github.com/uvalib/apts-bus-definitions/uvaaptsbus"
+	"github.com/uvalib/aptrust-submit-bus-definitions/uvaaptsbus"
 )
 
 type Event struct {
