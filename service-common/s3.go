@@ -18,6 +18,8 @@ import (
 	"os"
 	//"time"
 
+	"github.com/aws/aws-sdk-go-v2/credentials"
+
 	//"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
@@ -31,11 +33,17 @@ type uvaS3Client struct {
 	uploader   *manager.Uploader
 }
 
-func newS3Client() (*uvaS3Client, error) {
+func newS3Client(credentials *credentials.StaticCredentialsProvider) (*uvaS3Client, error) {
 	cfg, err := config.LoadDefaultConfig(context.TODO())
 	if err != nil {
 		return nil, err
 	}
+
+	// if we pass in credentials, use them instead of using them from the environment
+	if credentials != nil {
+		cfg.Credentials = *credentials
+	}
+
 	c := uvaS3Client{}
 	c.client = s3.NewFromConfig(cfg)
 	c.downloader = manager.NewDownloader(c.client)
@@ -83,22 +91,22 @@ func (c *uvaS3Client) s3List(bucket string, key string) ([]string, error) {
 	return result, nil
 }
 
-func (c *uvaS3Client) s3Exists(bucket string, key string) bool {
+func (c *uvaS3Client) s3Head(bucket string, key string) (*s3.HeadObjectOutput, error) {
 
 	log.Printf("head [%s/%s]", bucket, key)
 	start := time.Now()
 
-	_, err := c.client.HeadObject(context.TODO(), &s3.HeadObjectInput{
+	res, err := c.client.HeadObject(context.TODO(), &s3.HeadObjectInput{
 		Bucket: &bucket,
 		Key:    &key,
 	})
 
 	duration := time.Since(start)
 	log.Printf("head [%s/%s] complete in %0.2f seconds (%s)", bucket, key, duration.Seconds(), c.statusText(err))
-	return err == nil
+	return res, err
 }
 
-func (c *uvaS3Client) s3GetAttributes(bucket string, key string, attribs []types.ObjectAttributes) (s3.GetObjectAttributesOutput, error) {
+func (c *uvaS3Client) s3GetAttributes(bucket string, key string, attribs []types.ObjectAttributes) (*s3.GetObjectAttributesOutput, error) {
 
 	log.Printf("get attribs [%s/%s]", bucket, key)
 	start := time.Now()
@@ -111,19 +119,13 @@ func (c *uvaS3Client) s3GetAttributes(bucket string, key string, attribs []types
 
 	duration := time.Since(start)
 	log.Printf("get attribs [%s/%s] complete in %0.2f seconds (%s)", bucket, key, duration.Seconds(), c.statusText(err))
-	return *res, nil
+	return res, nil
 }
 
 func (c *uvaS3Client) s3Put(bucket string, key string, location string) error {
 
-	// validate inbound parameters
-	//if impl.validateS3Obj(obj) == false || len(location) == 0 {
-	//	return ErrBadParameter
-	//}
-
-	//source := fmt.Sprintf("s3://%s/%s", obj.BucketName(), obj.KeyName())
-
-	//impl.logInfo(fmt.Sprintf("put from %s to %s", location, source))
+	target := fmt.Sprintf("s3://%s/%s", bucket, key)
+	log.Printf("put from %s to %s", location, target)
 
 	// open the file
 	file, err := os.Open(location)
@@ -134,14 +136,14 @@ func (c *uvaS3Client) s3Put(bucket string, key string, location string) error {
 	defer file.Close()
 
 	// get the filesize
-	//s, err := file.Stat()
-	//if err != nil {
-	//	return err
-	//}
-	//fileSize := s.Size()
+	s, err := file.Stat()
+	if err != nil {
+		return err
+	}
+	fileSize := s.Size()
 
 	// Upload the file to S3.
-	//start := time.Now()
+	start := time.Now()
 	_, err = c.uploader.Upload(context.TODO(), &s3.PutObjectInput{
 		Bucket: &bucket,
 		Key:    &key,
@@ -151,8 +153,8 @@ func (c *uvaS3Client) s3Put(bucket string, key string, location string) error {
 		return err
 	}
 
-	//duration := time.Since(start)
-	//impl.logInfo(fmt.Sprintf("put %s complete in %0.2f seconds (%d bytes, %0.2f bytes/sec)", source, duration.Seconds(), fileSize, float64(fileSize)/duration.Seconds()))
+	duration := time.Since(start)
+	log.Printf("put %s complete in %0.2f seconds (%d bytes, %0.2f bytes/sec)", target, duration.Seconds(), fileSize, float64(fileSize)/duration.Seconds())
 	return nil
 }
 
