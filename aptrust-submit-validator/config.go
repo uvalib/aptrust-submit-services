@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 )
 
@@ -58,7 +57,7 @@ func LoadConfiguration() *ServiceConfig {
 	log.Printf("[CONFIG] HeartbeatTime   = [%d]", cfg.HeartbeatTime)
 
 	// ingest details
-	fmt.Printf("[CONFIG] InboundBucket   = [%s]\n", cfg.InboundBucket)
+	log.Printf("[CONFIG] InboundBucket   = [%s]", cfg.InboundBucket)
 
 	// event bus definitions
 	log.Printf("[CONFIG] BusName         = [%s]", cfg.BusName)
