@@ -7,13 +7,13 @@ require (
 	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.22.6
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.96.4
 	github.com/aws/aws-sdk-go-v2/service/sqs v1.42.23
-	github.com/uvalib/aptrust-submit-bus-definitions/uvaaptsbus v0.0.0-20260304150609-89898174d1c4
-	github.com/uvalib/aptrust-submit-db-dao/uvaaptsdao v0.0.0-20260304194221-8f14cd5aa956
+	github.com/uvalib/aptrust-submit-bus-definitions/uvaaptsbus v0.0.0-20260309130329-e1b24e270863
+	github.com/uvalib/aptrust-submit-db-dao/uvaaptsdao v0.0.0-20260309135510-96e0061e700e
 )
 
 // for local development
-replace github.com/uvalib/aptrust-submit-db-dao/uvaaptsdao => ../../aptrust-submit-db-dao/uvaaptsdao
-replace github.com/uvalib/aptrust-submit-bus-definitions/uvaaptsbus => ../../aptrust-submit-bus-definitions/uvaaptsbus
+//replace github.com/uvalib/aptrust-submit-db-dao/uvaaptsdao => ../../aptrust-submit-db-dao/uvaaptsdao
+//replace github.com/uvalib/aptrust-submit-bus-definitions/uvaaptsbus => ../../aptrust-submit-bus-definitions/uvaaptsbus
 
 require (
 	github.com/aws/aws-sdk-go-v2 v1.41.3 // indirect
