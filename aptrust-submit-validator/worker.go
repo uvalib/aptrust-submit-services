@@ -57,7 +57,7 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 	}
 
 	// create our s3 helper client
-	s3Client, err := newS3Client()
+	s3Client, err := newS3Client(nil)
 	if err != nil {
 		log.Printf("ERROR: creating s3 client (%s)", err.Error())
 		done <- false
@@ -101,7 +101,7 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 	}
 
 	duration := time.Since(start)
-	log.Printf("INFO: worker terminating (elapsed %0.2f seconds)\n", duration.Seconds())
+	log.Printf("INFO: worker terminating (elapsed %0.2f seconds)", duration.Seconds())
 	done <- true
 }
 

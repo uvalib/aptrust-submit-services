@@ -89,15 +89,15 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 
 	// we are done, publish the appropriate event and terminate
 	if reconcileFailures > 0 {
-		log.Printf("WARNING: %d conflicting files found for submission\n", reconcileFailures)
+		log.Printf("WARNING: %d conflicting files found for submission", reconcileFailures)
 		_ = publishWorkflowEvent(eventBus, uvaaptsbus.EventSubmissionReconcileFail, busEvent.ClientId, wf.SubmissionId, wf.BagId)
 	} else {
-		log.Printf("INFO: no conflicting files found for submission\n")
+		log.Printf("INFO: no conflicting files found for submission")
 		_ = publishWorkflowEvent(eventBus, uvaaptsbus.EventSubmissionApprove, busEvent.ClientId, wf.SubmissionId, wf.BagId)
 	}
 
 	duration := time.Since(start)
-	log.Printf("INFO: worker terminating (elapsed %0.2f seconds)\n", duration.Seconds())
+	log.Printf("INFO: worker terminating (elapsed %0.2f seconds)", duration.Seconds())
 	done <- true
 }
 

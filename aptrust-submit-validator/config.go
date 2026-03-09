@@ -64,11 +64,11 @@ func LoadConfiguration() *ServiceConfig {
 	log.Printf("[CONFIG] BusEventSource  = [%s]", cfg.BusEventSource)
 
 	// database definitions
-	log.Printf("[CONFIG] DbHost          = [%s]\n", cfg.DbHost)
-	log.Printf("[CONFIG] DbPort          = [%d]\n", cfg.DbPort)
-	log.Printf("[CONFIG] DbName          = [%s]\n", cfg.DbName)
-	log.Printf("[CONFIG] DbUser          = [%s]\n", cfg.DbUser)
-	log.Printf("[CONFIG] DbPassword      = [REDACTED]\n")
+	log.Printf("[CONFIG] DbHost          = [%s]", cfg.DbHost)
+	log.Printf("[CONFIG] DbPort          = [%d]", cfg.DbPort)
+	log.Printf("[CONFIG] DbName          = [%s]", cfg.DbName)
+	log.Printf("[CONFIG] DbUser          = [%s]", cfg.DbUser)
+	log.Printf("[CONFIG] DbPassword      = [REDACTED]")
 
 	return &cfg
 }
