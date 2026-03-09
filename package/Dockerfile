@@ -8,6 +8,8 @@ RUN apk update && apk upgrade && apk add --no-cache make
 
 WORKDIR /build
 COPY service-common ./service-common
+COPY aptrust-submit-reconciler ./aptrust-submit-reconciler
+RUN cd aptrust-submit-reconciler; make linux
 COPY aptrust-submit-validator ./aptrust-submit-validator
 RUN cd aptrust-submit-validator; make linux
 
@@ -39,11 +41,13 @@ RUN chown -R webservice ${APP_HOME} && chgrp -R webservice ${APP_HOME}
 
 # Move in necessary assets
 COPY package/data/container_bash_profile /home/webservice/.profile
+COPY package/scripts/reconciler-entry.ksh ${APP_HOME}/scripts/reconciler-entry.ksh
 COPY package/scripts/validator-entry.ksh ${APP_HOME}/scripts/validator-entry.ksh
+COPY --from=builder /build/aptrust-submit-reconciler/bin/aptrust-submit-reconciler.linux ${APP_HOME}/bin/aptrust-submit-reconciler
 COPY --from=builder /build/aptrust-submit-validator/bin/aptrust-submit-validator.linux ${APP_HOME}/bin/aptrust-submit-validator
 
 # Ensure permissions are correct
-RUN chown webservice:webservice /home/webservice/.profile ${APP_HOME}/scripts/validator-entry.ksh ${APP_HOME}/bin/aptrust-submit-validator && chmod 755 /home/webservice/.profile ${APP_HOME}/scripts/validator-entry.ksh ${APP_HOME}/bin/aptrust-submit-validator
+RUN chown webservice:webservice /home/webservice/.profile ${APP_HOME}/scripts/reconciler-entry.ksh ${APP_HOME}/scripts/validator-entry.ksh ${APP_HOME}/bin/aptrust-submit-reconciler ${APP_HOME}/bin/aptrust-submit-validator && chmod 755 /home/webservice/.profile ${APP_HOME}/scripts/reconciler-entry.ksh ${APP_HOME}/scripts/validator-entry.ksh ${APP_HOME}/bin/aptrust-submit-reconciler ${APP_HOME}/bin/aptrust-submit-validator
 
 # Add the build tag
 ARG BUILD_TAG
