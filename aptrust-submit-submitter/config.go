@@ -12,7 +12,7 @@ type ServiceConfig struct {
 	HeartbeatTime int32  // the SQS queue heartbeat time (in seconds)
 
 	// ingest details
-	LocalAssetCache string // the root of the asset cache
+	LocalAssetCache string // the root of the local asset cache
 
 	// outbound details
 	APTBucket    string // the outbound bucket name
