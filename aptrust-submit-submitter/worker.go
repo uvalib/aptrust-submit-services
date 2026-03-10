@@ -96,6 +96,7 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 		return
 	}
 
+	// FIXME
 	log.Printf("INFO: ETag for [%s] => (%s)", bagFile, *res.ETag)
 
 	// we are done, publish the appropriate event and terminate
