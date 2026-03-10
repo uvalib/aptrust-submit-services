@@ -48,5 +48,5 @@ github.com/rs/xid v1.6.0 h1:fV591PaemRlL6JfRxGDEPl69wICngIQ3shQtzfy2gxU=
 github.com/rs/xid v1.6.0/go.mod h1:7XoLgs4eV+QndskICGsho+ADou8ySMSjJKDIan90Nz0=
 github.com/uvalib/aptrust-submit-bus-definitions/uvaaptsbus v0.0.0-20260309130329-e1b24e270863 h1:2Q1pUhSVqnVzuoyiQ6oKuJ95ME4rqxqGsLMAFI4QyGQ=
 github.com/uvalib/aptrust-submit-bus-definitions/uvaaptsbus v0.0.0-20260309130329-e1b24e270863/go.mod h1:7R2aqbx1YWfJhh3xWuAMvs2YLO2OcZGUmLsqbHMlp4Y=
-github.com/uvalib/aptrust-submit-db-dao/uvaaptsdao v0.0.0-20260309135510-96e0061e700e h1:KJBMStbESE/hQTngUCX8D4ymR7AHK6Wg9EJAWFhuw80=
-github.com/uvalib/aptrust-submit-db-dao/uvaaptsdao v0.0.0-20260309135510-96e0061e700e/go.mod h1:oxug90pVhw0FcYc49Pf848Xs/mLoOWtbVObr36V6cuI=
+github.com/uvalib/aptrust-submit-db-dao/uvaaptsdao v0.0.0-20260309182453-229fc621ff6b h1:/sG2NP35nl0Mdrglewj+xtGHusQw5JgA+Sa4n772j34=
+github.com/uvalib/aptrust-submit-db-dao/uvaaptsdao v0.0.0-20260309182453-229fc621ff6b/go.mod h1:oxug90pVhw0FcYc49Pf848Xs/mLoOWtbVObr36V6cuI=

@@ -50,7 +50,7 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 	// get all the files that conflict for this submission
 	files, err := dao.GetConflictFilesBySubmission(wf.SubmissionId)
 	if err != nil {
-		if errors.Is(err, uvaaptsdao.ErrFileNotFound) == false {
+		if errors.As(err, &uvaaptsdao.ErrFileNotFound) == false {
 			log.Printf("ERROR: getting submission conflict file set (%s)", err.Error())
 			done <- false
 			return
@@ -65,7 +65,7 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 		// get our whitelisted file set
 		whitelist, err := dao.GetWhitelistedFiles()
 		if err != nil {
-			if errors.Is(err, uvaaptsdao.ErrFileNotFound) == false {
+			if errors.As(err, &uvaaptsdao.ErrFileNotFound) == false {
 				log.Printf("ERROR: getting whitelist fileset (%s)", err.Error())
 				done <- false
 				return
