@@ -8,8 +8,8 @@ RUN apk update && apk upgrade && apk add --no-cache make
 
 WORKDIR /build
 COPY service-common ./service-common
-#COPY aptrust-submit-bagger ./aptrust-submit-bagger
-#RUN cd aptrust-submit-bagger; make linux
+COPY aptrust-submit-bagger ./aptrust-submit-bagger
+RUN cd aptrust-submit-bagger; make linux
 COPY aptrust-submit-reconciler ./aptrust-submit-reconciler
 RUN cd aptrust-submit-reconciler; make linux
 COPY aptrust-submit-submitter ./aptrust-submit-submitter
@@ -49,7 +49,7 @@ COPY package/scripts/bagger-entry.ksh ${APP_HOME}/scripts/bagger-entry.ksh
 COPY package/scripts/reconciler-entry.ksh ${APP_HOME}/scripts/reconciler-entry.ksh
 COPY package/scripts/submitter-entry.ksh ${APP_HOME}/scripts/submitter-entry.ksh
 COPY package/scripts/validator-entry.ksh ${APP_HOME}/scripts/validator-entry.ksh
-#COPY --from=builder /build/aptrust-submit-bagger/bin/aptrust-submit-bagger.linux ${APP_HOME}/bin/aptrust-submit-bagger
+COPY --from=builder /build/aptrust-submit-bagger/bin/aptrust-submit-bagger.linux ${APP_HOME}/bin/aptrust-submit-bagger
 COPY --from=builder /build/aptrust-submit-reconciler/bin/aptrust-submit-reconciler.linux ${APP_HOME}/bin/aptrust-submit-reconciler
 COPY --from=builder /build/aptrust-submit-submitter/bin/aptrust-submit-submitter.linux ${APP_HOME}/bin/aptrust-submit-submitter
 COPY --from=builder /build/aptrust-submit-validator/bin/aptrust-submit-validator.linux ${APP_HOME}/bin/aptrust-submit-validator
