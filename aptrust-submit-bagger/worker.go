@@ -36,21 +36,27 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 	// create our event bus client
 	eventBus, _ := NewEventBus(cfg.BusName, cfg.BusEventSource)
 
-	// S3 assets in <bucket>/<clientId>/<submissionId>/...
-	submissionKeyPrefix := fmt.Sprintf("%s/%s", busEvent.ClientId, wf.SubmissionId)
+	// S3 assets in <bucket>/<clientId>/<submissionId>/<bag name>/...
+	bagKey := fmt.Sprintf("%s/%s/%s", busEvent.ClientId, wf.SubmissionId, wf.BagId)
 
-	// local assets in <cache root>/<clientId>/<submissionId>/...
-	localAssets := fmt.Sprintf("%s/%s/%s", cfg.LocalAssetCache, busEvent.ClientId, wf.SubmissionId)
+	// local assets in <cache root>/<clientId>/<submissionId>/<bag name>/...
+	localSubmissionRoot := fmt.Sprintf("%s/%s/%s", cfg.LocalAssetCache, busEvent.ClientId, wf.SubmissionId)
+	localBagRoot := fmt.Sprintf("%s/%s", localSubmissionRoot, wf.BagId)
+	localBagName := fmt.Sprintf("%s/%s.tar", localSubmissionRoot, wf.BagId)
 
 	// do the sync
-	err = syncAssets(cfg.InboundBucket, submissionKeyPrefix, localAssets, cfg.SyncWorkers)
+	err = syncAssets(cfg.InboundBucket, bagKey, localBagRoot, cfg.SyncWorkers)
 	if err != nil {
-		//log.Printf("ERROR: unmarshaling workflow event (%s)", err.Error())
 		done <- false
 		return
 	}
 
-	// FIXME do bagging here...
+	// do the bagging
+	err = bagAssets(localSubmissionRoot, wf.BagId, localBagName)
+	if err != nil {
+		done <- false
+		return
+	}
 
 	// we are done, publish the appropriate event and terminate
 	_ = publishWorkflowEvent(eventBus, uvaaptsbus.EventBagBuilt, busEvent.ClientId, wf.SubmissionId, wf.BagId)
