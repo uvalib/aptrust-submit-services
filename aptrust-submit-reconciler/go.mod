@@ -5,8 +5,8 @@ go 1.26.0
 require (
 	github.com/aws/aws-sdk-go-v2/config v1.32.11
 	github.com/aws/aws-sdk-go-v2/service/sqs v1.42.23
-	github.com/uvalib/aptrust-submit-bus-definitions/uvaaptsbus v0.0.0-20260309130329-e1b24e270863
-	github.com/uvalib/aptrust-submit-db-dao/uvaaptsdao v0.0.0-20260309182453-229fc621ff6b
+	github.com/uvalib/aptrust-submit-bus-definitions/uvaaptsbus v0.0.0-20260311131233-98a8b27a0f2d
+	github.com/uvalib/aptrust-submit-db-dao/uvaaptsdao v0.0.0-20260312173023-59a74a208f83
 )
 
 // for local development

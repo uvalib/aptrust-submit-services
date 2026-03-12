@@ -42,5 +42,5 @@ github.com/aws/aws-sdk-go-v2/service/sts v1.41.8 h1:XQTQTF75vnug2TXS8m7CVJfC2nni
 github.com/aws/aws-sdk-go-v2/service/sts v1.41.8/go.mod h1:Xgx+PR1NUOjNmQY+tRMnouRp83JRM8pRMw/vCaVhPkI=
 github.com/aws/smithy-go v1.24.2 h1:FzA3bu/nt/vDvmnkg+R8Xl46gmzEDam6mZ1hzmwXFng=
 github.com/aws/smithy-go v1.24.2/go.mod h1:YE2RhdIuDbA5E5bTdciG9KrW3+TiEONeUWCqxX9i1Fc=
-github.com/uvalib/aptrust-submit-bus-definitions/uvaaptsbus v0.0.0-20260309130329-e1b24e270863 h1:2Q1pUhSVqnVzuoyiQ6oKuJ95ME4rqxqGsLMAFI4QyGQ=
-github.com/uvalib/aptrust-submit-bus-definitions/uvaaptsbus v0.0.0-20260309130329-e1b24e270863/go.mod h1:7R2aqbx1YWfJhh3xWuAMvs2YLO2OcZGUmLsqbHMlp4Y=
+github.com/uvalib/aptrust-submit-bus-definitions/uvaaptsbus v0.0.0-20260311131233-98a8b27a0f2d h1:iAvaJeyxm+USYwrFjnDG02t0AvSL3Ep6gYYj/xwJo+o=
+github.com/uvalib/aptrust-submit-bus-definitions/uvaaptsbus v0.0.0-20260311131233-98a8b27a0f2d/go.mod h1:7R2aqbx1YWfJhh3xWuAMvs2YLO2OcZGUmLsqbHMlp4Y=

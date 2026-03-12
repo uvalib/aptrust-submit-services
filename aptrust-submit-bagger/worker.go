@@ -59,7 +59,7 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 	}
 
 	// we are done, publish the appropriate event and terminate
-	_ = publishWorkflowEvent(eventBus, uvaaptsbus.EventBagBuilt, busEvent.ClientId, wf.SubmissionId, wf.BagId)
+	_ = publishWorkflowEvent(eventBus, uvaaptsbus.EventBagBuilt, busEvent.ClientId, wf.SubmissionId, wf.BagId, "")
 
 	duration := time.Since(start)
 	log.Printf("INFO: worker terminating (elapsed %0.2f seconds)", duration.Seconds())

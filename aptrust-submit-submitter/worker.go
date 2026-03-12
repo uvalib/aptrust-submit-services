@@ -100,7 +100,7 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 	log.Printf("INFO: ETag for [%s] => (%s)", bagFile, *res.ETag)
 
 	// we are done, publish the appropriate event and terminate
-	_ = publishWorkflowEvent(eventBus, uvaaptsbus.EventBagSubmitted, busEvent.ClientId, wf.SubmissionId, wf.BagId)
+	_ = publishWorkflowEvent(eventBus, uvaaptsbus.EventBagSubmitted, busEvent.ClientId, wf.SubmissionId, wf.BagId, "")
 
 	duration := time.Since(start)
 	log.Printf("INFO: worker terminating (elapsed %0.2f seconds)", duration.Seconds())

@@ -2,8 +2,10 @@ package main
 
 func validateChecksum(reported string, expected string) bool {
 
-	// FIXME
-	return true
+	//log.Printf("expected [%s], actual [%s]", expected, reported)
+
+	// easier than I thought right?
+	return expected == reported
 }
 
 //

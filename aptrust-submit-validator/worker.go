@@ -3,9 +3,9 @@ package main
 import (
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/uvalib/aptrust-submit-bus-definitions/uvaaptsbus"
 	"github.com/uvalib/aptrust-submit-db-dao/uvaaptsdao"
 )
@@ -74,30 +74,27 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 		key := fmt.Sprintf("%s/%s/%s", submissionKeyPrefix, f.BagName, f.Name)
 		log.Printf("DEBUG: validating submission file [%s]...", key)
 
-		reqAttr := []types.ObjectAttributes{types.ObjectAttributesChecksum}
-		resAttr, err := s3Client.s3GetAttributes(cfg.InboundBucket, key, reqAttr)
+		res, err := s3Client.s3Head(cfg.InboundBucket, key)
 		if err != nil {
 			log.Printf("ERROR: getting attributes for [%s] (%s)", key, err.Error())
 			done <- false
 			return
 		}
 
-		// did we get some checksum values
-		if resAttr.Checksum != nil && len(*resAttr.Checksum.ChecksumSHA256) != 0 {
-			if validateChecksum(*resAttr.Checksum.ChecksumSHA256, f.Hash) == false {
-				checksumFailures++
-				log.Printf("ERROR: checksum failure for [%s]", key)
-			}
-		} else {
-			log.Printf("WARNING: no SHA256 checksum [%s], no validation done", key)
+		// trim leading and trailing quote characters
+		str := strings.Trim(*res.ETag, "\"")
+
+		if validateChecksum(str, f.Hash) == false {
+			checksumFailures++
+			log.Printf("ERROR: checksum failure for [%s]", key)
 		}
 	}
 
 	// we are done, publish the appropriate event and terminate
 	if checksumFailures > 0 {
-		_ = publishWorkflowEvent(eventBus, uvaaptsbus.EventSubmissionValidateFail, busEvent.ClientId, wf.SubmissionId, wf.BagId)
+		_ = publishWorkflowEvent(eventBus, uvaaptsbus.EventSubmissionValidateFail, busEvent.ClientId, wf.SubmissionId, wf.BagId, "")
 	} else {
-		_ = publishWorkflowEvent(eventBus, uvaaptsbus.EventSubmissionReconcile, busEvent.ClientId, wf.SubmissionId, wf.BagId)
+		_ = publishWorkflowEvent(eventBus, uvaaptsbus.EventSubmissionReconcile, busEvent.ClientId, wf.SubmissionId, wf.BagId, "")
 	}
 
 	duration := time.Since(start)
