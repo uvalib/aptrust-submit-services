@@ -119,7 +119,7 @@ func (c *uvaS3Client) s3GetAttributes(bucket string, key string, attribs []types
 
 	duration := time.Since(start)
 	log.Printf("get attribs [%s/%s] complete in %0.2f seconds (%s)", bucket, key, duration.Seconds(), c.statusText(err))
-	return res, nil
+	return res, err
 }
 
 func (c *uvaS3Client) s3Put(bucket string, key string, location string) error {
@@ -190,7 +190,7 @@ func (c *uvaS3Client) s3Get(bucket string, key string, location string) error {
 
 	duration := time.Since(start)
 	log.Printf("INFO: get of %s complete in %0.2f seconds (%d bytes, %0.2f bytes/sec) (%s)", source, duration.Seconds(), fileSize, float64(fileSize)/duration.Seconds(), c.statusText(err))
-	return nil
+	return err
 }
 
 func (s *uvaS3Client) statusText(err error) string {
