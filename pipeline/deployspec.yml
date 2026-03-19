@@ -30,9 +30,9 @@ phases:
       #- terraform apply -no-color -auto-approve
       #
       # apt-submit-reconciler
-      #- cd $CODEBUILD_SRC_DIR/terraform-infrastructure/aptrust-submit/ecs-tasks/staging/apt-submit-reconciler
-      #- terraform init -no-color
-      #- terraform apply -no-color -auto-approve
+      - cd $CODEBUILD_SRC_DIR/terraform-infrastructure/aptrust-submit/ecs-tasks/staging/apt-submit-reconciler
+      - terraform init -no-color
+      - terraform apply -no-color -auto-approve
       #
       # apt-submit-submitter
       #- cd $CODEBUILD_SRC_DIR/terraform-infrastructure/aptrust-submit/ecs-tasks/staging/apt-submit-submitter
