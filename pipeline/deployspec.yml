@@ -23,9 +23,26 @@ phases:
 
   build:
     commands:
-      #- cd $CODEBUILD_SRC_DIR/terraform-infrastructure/mandala/ecs-tasks/staging/mandala-kmassets-solr-email-notify
+      #
+      # apt-submit-bagger
+      #- cd $CODEBUILD_SRC_DIR/terraform-infrastructure/aptrust-submit/ecs-tasks/staging/apt-submit-bagger
       #- terraform init -no-color
       #- terraform apply -no-color -auto-approve
+      #
+      # apt-submit-reconciler
+      #- cd $CODEBUILD_SRC_DIR/terraform-infrastructure/aptrust-submit/ecs-tasks/staging/apt-submit-reconciler
+      #- terraform init -no-color
+      #- terraform apply -no-color -auto-approve
+      #
+      # apt-submit-submitter
+      #- cd $CODEBUILD_SRC_DIR/terraform-infrastructure/aptrust-submit/ecs-tasks/staging/apt-submit-submitter
+      #- terraform init -no-color
+      #- terraform apply -no-color -auto-approve
+      #
+      # apt-submit-validator
+      - cd $CODEBUILD_SRC_DIR/terraform-infrastructure/aptrust-submit/ecs-tasks/staging/apt-submit-validator
+      - terraform init -no-color
+      - terraform apply -no-color -auto-approve
 
 #  post_build:
 #    commands:
