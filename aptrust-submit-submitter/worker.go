@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/credentials"
@@ -96,10 +97,13 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 		return
 	}
 
-	log.Printf("INFO: ETag for [%s] => (%s)", bagFile, *res.ETag)
+	// remove the leading and trailing quote
+	etag := strings.Trim(*res.ETag, "\"")
+	
+	log.Printf("INFO: ETag for [%s] => (%s)", bagFile, etag)
 
 	// we are done, publish the appropriate event and terminate
-	_ = publishWorkflowEvent(eventBus, uvaaptsbus.EventBagSubmitted, busEvent.ClientId, wf.SubmissionId, wf.BagId, *res.ETag)
+	_ = publishWorkflowEvent(eventBus, uvaaptsbus.EventBagSubmitted, busEvent.ClientId, wf.SubmissionId, wf.BagId, etag)
 
 	duration := time.Since(start)
 	log.Printf("INFO: worker terminating (elapsed %0.2f seconds)", duration.Seconds())
