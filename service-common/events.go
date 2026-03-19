@@ -2,7 +2,7 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
+	"log"
 
 	"github.com/uvalib/aptrust-submit-bus-definitions/uvaaptsbus"
 )
@@ -10,7 +10,7 @@ import (
 func NewEventBus(eventBus string, eventSource string) (uvaaptsbus.UvaBus, error) {
 	// we will accept bad config and return nil quietly
 	if len(eventBus) == 0 {
-		fmt.Printf("INFO: Event bus is not configured, no events emitted\n")
+		log.Printf("INFO: Event bus is not configured, no events emitted")
 		return nil, uvaaptsbus.ErrConfig
 	}
 
@@ -29,10 +29,10 @@ func publishWorkflowEvent(bus uvaaptsbus.UvaBus, eventName string, clientId stri
 		Detail:    detail,
 	}
 
-	fmt.Printf("INFO: publishing [%v]\n", ev)
+	log.Printf("INFO: publishing [%v]", ev)
 	err := bus.PublishEvent(&ev)
 	if err != nil {
-		fmt.Printf("ERROR: publishing (%s)\n", err.Error())
+		log.Printf("ERROR: publishing (%s)", err.Error())
 	}
 	return err
 }
