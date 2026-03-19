@@ -57,9 +57,11 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 		}
 	}
 
+	log.Printf("INFO: %d possible files conflicting", len(files))
+
 	// for every conflict file in the submission, determine if we can ignore it by checking on the
 	// whitelist
-	reconcileFailures := 0
+	failures := make([]uvaaptsdao.File, 0)
 	if files != nil {
 
 		// get our whitelisted file set
@@ -76,20 +78,22 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 		if whitelist != nil {
 			for _, f := range files {
 				w := inWhitelist(whitelist, f.Hash)
-				if w == nil {
-					reconcileFailures++
-				} else {
-					log.Printf("INFO: hash found in whitelist fileset, ignoring [%s]", f.Name)
+				if w != nil {
+					log.Printf("INFO: hash found in whitelist fileset, ignoring [%s] (%s)", f.Name, w.Comment)
+					continue
 				}
+				failures = append(failures, f)
 			}
 		} else {
-			reconcileFailures = len(files)
+			failures = files
 		}
 	}
 
 	// we are done, publish the appropriate event and terminate
-	if reconcileFailures > 0 {
-		log.Printf("WARNING: %d conflicting files found for submission", reconcileFailures)
+	if len(failures) > 0 {
+		for _, f := range failures {
+			log.Printf("WARNING: unsuppressed conflict for <%s/%s>", f.BagName, f.Name)
+		}
 		_ = publishWorkflowEvent(eventBus, uvaaptsbus.EventSubmissionReconcileFail, busEvent.ClientId, wf.SubmissionId, wf.BagId, "")
 	} else {
 		log.Printf("INFO: no conflicting files found for submission")
