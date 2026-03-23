@@ -1,0 +1,6 @@
+Source-Organization: virginia.edu
+Bag-Count: 1
+Bagging-Date: {{.Date}}
+Internal-Sender-Description: {{.SenderDescription}}
+Internal-Sender-Identifier: {{.SenderIdentifier}}
+Bag-Group-Identifier: {{.BagGroupIdentifier}}

@@ -1,0 +1,4 @@
+Title: {{.Title}}
+Description: {{.Description}}
+Access: Consortia
+Storage-Option: {{.Storage}}

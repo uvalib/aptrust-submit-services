@@ -43,16 +43,17 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 	localSubmissionRoot := fmt.Sprintf("%s/%s/%s", cfg.LocalAssetCache, busEvent.ClientId, wf.SubmissionId)
 	localBagRoot := fmt.Sprintf("%s/%s", localSubmissionRoot, wf.BagId)
 	localBagName := fmt.Sprintf("%s/%s.tar", localSubmissionRoot, wf.BagId)
+	localSyncRoot := fmt.Sprintf("%s/data", localBagRoot)
 
 	// do the sync
-	err = syncAssets(cfg.InboundBucket, bagKey, localBagRoot, cfg.SyncWorkers)
+	err = syncAssets(cfg.InboundBucket, bagKey, localSyncRoot, cfg.SyncWorkers)
 	if err != nil {
 		done <- false
 		return
 	}
 
 	// do the bagging
-	err = bagAssets(localSubmissionRoot, wf.BagId, localBagName)
+	err = bagAssets(localSubmissionRoot, wf.SubmissionId, wf.BagId, localBagName)
 	if err != nil {
 		done <- false
 		return
