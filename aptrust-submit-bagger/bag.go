@@ -29,7 +29,7 @@ var manifestName = "manifest-md5.txt"
 var tagManifestName = "tagmanifest-md5.txt"
 var aptrustInfoName = "aptrust-info.txt"
 var bagInfoName = "bag-info.txt"
-var bagitName = "baggit.txt"
+var bagitName = "bagit.txt"
 var tagFiles = []string{aptrustInfoName, bagInfoName, manifestName}
 
 // attributes required by the templates used in the bagging process
