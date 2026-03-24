@@ -22,11 +22,11 @@ type ServiceConfig struct {
 	SyncWorkers int32 // the number of s3 sync workers
 
 	// database configuration
-	//DbHost     string // database host
-	//DbPort     int    // database port
-	//DbName     string // database name
-	//DbUser     string // database user
-	//DbPassword string // database password
+	DbHost     string // database host
+	DbPort     int    // database port
+	DbName     string // database name
+	DbUser     string // database user
+	DbPassword string // database password
 }
 
 // LoadConfiguration will load the service configuration from env/cmdline
@@ -51,11 +51,11 @@ func LoadConfiguration() *ServiceConfig {
 	cfg.SyncWorkers = int32(envToInt("SYNC_WORKERS"))
 
 	// database definitions
-	//cfg.DbHost = ensureSetAndNonEmpty("DB_HOST")
-	//cfg.DbPort = envToInt("DB_PORT")
-	//cfg.DbName = ensureSetAndNonEmpty("DB_NAME")
-	//cfg.DbUser = ensureSetAndNonEmpty("DB_USER")
-	//cfg.DbPassword = ensureSetAndNonEmpty("DB_PASSWORD")
+	cfg.DbHost = ensureSetAndNonEmpty("DB_HOST")
+	cfg.DbPort = envToInt("DB_PORT")
+	cfg.DbName = ensureSetAndNonEmpty("DB_NAME")
+	cfg.DbUser = ensureSetAndNonEmpty("DB_USER")
+	cfg.DbPassword = ensureSetAndNonEmpty("DB_PASSWORD")
 
 	// queue definitions
 	log.Printf("[CONFIG] InQueueName     = [%s]", cfg.InQueueName)
@@ -73,11 +73,11 @@ func LoadConfiguration() *ServiceConfig {
 	log.Printf("[CONFIG] SyncWorkers     = [%d]", cfg.SyncWorkers)
 
 	// database definitions
-	//log.Printf("[CONFIG] DbHost          = [%s]", cfg.DbHost)
-	//log.Printf("[CONFIG] DbPort          = [%d]", cfg.DbPort)
-	//log.Printf("[CONFIG] DbName          = [%s]", cfg.DbName)
-	//log.Printf("[CONFIG] DbUser          = [%s]", cfg.DbUser)
-	//log.Printf("[CONFIG] DbPassword      = [REDACTED]")
+	log.Printf("[CONFIG] DbHost          = [%s]", cfg.DbHost)
+	log.Printf("[CONFIG] DbPort          = [%d]", cfg.DbPort)
+	log.Printf("[CONFIG] DbName          = [%s]", cfg.DbName)
+	log.Printf("[CONFIG] DbUser          = [%s]", cfg.DbUser)
+	log.Printf("[CONFIG] DbPassword      = [REDACTED]")
 
 	return &cfg
 }

@@ -20,8 +20,8 @@ import (
 var templates embed.FS
 
 // internal stuff
-var descriptionFileName = "description.txt"
-var titleFileName = "title.txt"
+var descriptionFileName = "aptrust-description.txt"
+var titleFileName = "aptrust-title.txt"
 var defaultPermissions = os.FileMode(0744)
 
 // bag asset names
@@ -32,27 +32,40 @@ var bagInfoName = "bag-info.txt"
 var bagitName = "baggit.txt"
 var tagFiles = []string{aptrustInfoName, bagInfoName, manifestName}
 
-// assets have been sync'd into the data/... folder, we need to remove and process what should not be there
-// and write the remaining assets
+// attributes required by the templates used in the bagging process
+type BaggingAttributes struct {
+	BagGroupIdentifier string
+	Date               string
+	Description        string
+	SenderDescription  string
+	SenderIdentifier   string
+	Storage            string
+	Title              string
+}
 
-func bagAssets(root string, submission string, bagname string, outfile string) error {
+//
+// assets have been sync'd into the data/... folder, we need to remove and process what should not be there,
+// write the remaining assets and generate the tarfile (bag) in preparation for APTrust submission
+//
+
+func bagAssets(root string, bagname string, outfile string, attribs BaggingAttributes) error {
 
 	bagDir := path.Join(root, bagname)
 
 	// bagit.txt file
-	err := addBagitFile(bagDir, bagitName)
+	err := addFileFromTemplate(bagDir, bagitName, attribs)
 	if err != nil {
 		return err
 	}
 
 	// aptrust-info.txt file
-	err = addAPTInfoFile(bagDir, aptrustInfoName)
+	err = addFileFromTemplate(bagDir, aptrustInfoName, attribs)
 	if err != nil {
 		return err
 	}
 
 	// bag-info.txt file
-	err = addBagInfoFile(bagDir, bagInfoName)
+	err = addFileFromTemplate(bagDir, bagInfoName, attribs)
 	if err != nil {
 		return err
 	}
@@ -72,9 +85,9 @@ func bagAssets(root string, submission string, bagname string, outfile string) e
 	return makeTarfile(root, bagname, outfile)
 }
 
+// read the existing manifest, we will rewrite it and remove spurious info
 func updateManifest(root string, filename string) error {
 
-	// read the existing manifest, we will rewrite it and remove spurious info
 	existing := path.Join(root, "data", filename)
 	contents, err := readFile(existing)
 	if err != nil {
@@ -88,9 +101,10 @@ func updateManifest(root string, filename string) error {
 			fp := tok[0]
 			file := strings.Trim(tok[1], " ")
 
-			//if keepInManifest(file) == true {
-			newContents += fmt.Sprintf("%s data/%s\n", fp, file)
-			//}
+			// does this file belong in the manifest
+			if keepInManifest(file) == true {
+				newContents += fmt.Sprintf("%s data/%s\n", fp, file)
+			}
 
 		} else {
 			log.Printf("WARNING: ignoring badly formed manifest line [%s]", line)
@@ -103,24 +117,14 @@ func updateManifest(root string, filename string) error {
 	return os.WriteFile(path.Join(root, filename), []byte(newContents), defaultPermissions)
 }
 
-func addBagInfoFile(root string, filename string) error {
+// render a template and write to the specified output file
+func addFileFromTemplate(root string, filename string, attribs BaggingAttributes) error {
 
 	// read and parse the template
 	name := fmt.Sprintf("%s.template", filename)
 	tmpl, err := readAndParseTemplate(name)
 	if err != nil {
 		return err
-	}
-
-	// populate the attributes required by the templates
-	type Attributes struct {
-		Date               string
-		SenderDescription  string
-		SenderIdentifier   string
-		BagGroupIdentifier string
-	}
-	attribs := Attributes{
-		// populate
 	}
 
 	// render the template
@@ -135,63 +139,7 @@ func addBagInfoFile(root string, filename string) error {
 	return os.WriteFile(path.Join(root, filename), renderedBuffer.Bytes(), defaultPermissions)
 }
 
-func addAPTInfoFile(root string, filename string) error {
-
-	// read and parse the template
-	name := fmt.Sprintf("%s.template", filename)
-	tmpl, err := readAndParseTemplate(name)
-	if err != nil {
-		return err
-	}
-
-	// populate the attributes required by the templates
-	type Attributes struct {
-		Title       string
-		Description string
-		Storage     string
-	}
-	attribs := Attributes{
-		// populate
-	}
-
-	// render the template
-	var renderedBuffer bytes.Buffer
-	err = tmpl.Execute(&renderedBuffer, attribs)
-	if err != nil {
-		log.Printf("ERROR: executing [%s] (%s)", name, err.Error())
-		return err
-	}
-
-	log.Printf("INFO: writing [%s]", filename)
-	return os.WriteFile(path.Join(root, filename), renderedBuffer.Bytes(), defaultPermissions)
-}
-
-func addBagitFile(root string, filename string) error {
-
-	// read and parse the template
-	name := fmt.Sprintf("%s.template", filename)
-	tmpl, err := readAndParseTemplate(name)
-	if err != nil {
-		return err
-	}
-
-	// populate the attributes required by the templates (none in this case)
-	type Attributes struct {
-	}
-	attribs := Attributes{}
-
-	// render the template
-	var renderedBuffer bytes.Buffer
-	err = tmpl.Execute(&renderedBuffer, attribs)
-	if err != nil {
-		log.Printf("ERROR: executing [%s] (%s)", name, err.Error())
-		return err
-	}
-
-	log.Printf("INFO: writing [%s]", filename)
-	return os.WriteFile(path.Join(root, filename), renderedBuffer.Bytes(), defaultPermissions)
-}
-
+// create the meta-manifest
 func addTagManifest(root string, filename string, tagFiles []string) error {
 
 	data := ""
@@ -204,10 +152,10 @@ func addTagManifest(root string, filename string, tagFiles []string) error {
 		data += fmt.Sprintf("%s %s\n", fp, tf)
 	}
 	log.Printf("INFO: writing [%s]", filename)
-	log.Printf("INFO: contents [%s]", data)
-	return os.WriteFile(filename, []byte(data), defaultPermissions)
+	return os.WriteFile(path.Join(root, filename), []byte(data), defaultPermissions)
 }
 
+// generate a tarfile of the bag contents
 func makeTarfile(root string, bagname string, outfile string) error {
 
 	log.Printf("INFO: creating tarfile [%s]", outfile)
@@ -227,6 +175,7 @@ func makeTarfile(root string, bagname string, outfile string) error {
 	return err
 }
 
+// boilerplate for loading and parsing a template
 func readAndParseTemplate(templateName string) (*template.Template, error) {
 
 	// read the template
@@ -246,6 +195,19 @@ func readAndParseTemplate(templateName string) (*template.Template, error) {
 	return tmpl, nil
 }
 
+// some files do not belong in the manifest because we are not sending them to APTrust
+func keepInManifest(filename string) bool {
+	if strings.HasSuffix(filename, descriptionFileName) {
+		return false
+	}
+
+	if strings.HasSuffix(filename, titleFileName) {
+		return false
+	}
+	return true
+}
+
+// provide md5 fingerprint of the specified file
 func md5Checksum(filename string) (string, error) {
 	_, err := os.Stat(filename)
 	if err == nil {
@@ -257,6 +219,7 @@ func md5Checksum(filename string) (string, error) {
 	return "", err
 }
 
+// read the specified file into a slice of strings, contents separated by newlines
 func readFile(path string) ([]string, error) {
 
 	content, err := os.ReadFile(path)
