@@ -84,9 +84,17 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 		// trim leading and trailing quote characters
 		str := strings.Trim(*res.ETag, "\"")
 
+		// the ETag for smaller files is the md5 fingerprint, for a multipart upload it is
+		// different so we cannot be sure of a failure so just ignore it
 		if validateChecksum(str, f.Hash) == false {
-			checksumFailures++
-			log.Printf("ERROR: checksum failure for [%s]", key)
+			if strings.Contains(str, "-") == true {
+				log.Printf("INFO: checksum difference for [%s]", key)
+				log.Printf("INFO: expected [%s], reported [%s] (looks like a multipart, ignoring)", f.Hash, str)
+			} else {
+				log.Printf("ERROR: checksum failure for [%s]", key)
+				log.Printf("ERROR: expected [%s], reported [%s]", f.Hash, str)
+				checksumFailures++
+			}
 		}
 	}
 
