@@ -94,10 +94,12 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 		for _, f := range failures {
 			log.Printf("WARNING: unsuppressed conflict for <%s/%s>", f.BagName, f.Name)
 			err = trackConflict(dao, f)
-			if errors.As(err, &uvaaptsdao.ErrFileNotFound) == false {
-				log.Printf("ERROR: adding conflict reference (%s)", err.Error())
-				//done <- false
-				//return
+			if err != nil {
+				if errors.As(err, &uvaaptsdao.ErrFileNotFound) == false {
+					log.Printf("ERROR: adding conflict reference (%s)", err.Error())
+					//done <- false
+					//return
+				}
 			}
 		}
 		_ = publishWorkflowEvent(eventBus, uvaaptsbus.EventSubmissionReconcileFail, busEvent.ClientId, wf.SubmissionId, wf.BagId, "")
