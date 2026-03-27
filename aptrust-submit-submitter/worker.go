@@ -35,7 +35,7 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 		return
 	}
 
-	log.Printf("INFO: EVENT %s / %s", busEvent.String(), wf.String())
+	log.Printf("INFO: event %s/%s", busEvent.String(), wf.String())
 
 	// create our event bus client
 	eventBus, _ := NewEventBus(cfg.BusName, cfg.BusEventSource)
@@ -99,7 +99,7 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 
 	// remove the leading and trailing quote
 	etag := strings.Trim(*res.ETag, "\"")
-	
+
 	log.Printf("INFO: ETag for [%s] => (%s)", bagFile, etag)
 
 	// we are done, publish the appropriate event and terminate

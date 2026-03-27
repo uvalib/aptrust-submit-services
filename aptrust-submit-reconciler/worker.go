@@ -31,7 +31,7 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 		return
 	}
 
-	log.Printf("INFO: EVENT %s / %s", busEvent.String(), wf.String())
+	log.Printf("INFO: event %s/%s", busEvent.String(), wf.String())
 
 	// create our event bus client
 	eventBus, _ := NewEventBus(cfg.BusName, cfg.BusEventSource)
