@@ -34,9 +34,6 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 
 	log.Printf("INFO: event %s/%s", busEvent.String(), wf.String())
 
-	// create our event bus client
-	eventBus, _ := NewEventBus(cfg.BusName, cfg.BusEventSource)
-
 	// create the data access object
 	dao, err := uvaaptsdao.NewDao(cfg.DbHost, cfg.DbPort, cfg.DbUser, cfg.DbPassword, cfg.DbName)
 	if err != nil {
@@ -47,14 +44,6 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 
 	// cleanup on exit
 	defer dao.Close()
-
-	// get all the files for this submission
-	files, err := dao.GetFilesBySubmission(wf.SubmissionId)
-	if err != nil {
-		log.Printf("ERROR: getting submission file set (%s)", err.Error())
-		done <- false
-		return
-	}
 
 	// create our s3 helper client
 	s3Client, err := newS3Client(nil)
@@ -67,11 +56,44 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 	// S3 assets in <bucket>/<clientId>/<submissionId>/...
 	submissionKeyPrefix := fmt.Sprintf("%s/%s", busEvent.ClientId, wf.SubmissionId)
 
+	// get a complete list of all the files included in the specified submission
+	suppliedFiles, err := s3Client.s3List(cfg.InboundBucket, submissionKeyPrefix)
+	if err != nil {
+		log.Printf("ERROR: listing submission assets (%s)", err.Error())
+		done <- false
+		return
+	}
+
+	// get all the bags and manifests included in the supplied files
+	manifestList := findIncludedManifests(submissionKeyPrefix, suppliedFiles)
+
+	// get an enumeration of all the files specified in the manifests
+	itemizedFiles := make([]ManifestRow, 0)
+	for _, manifest := range manifestList {
+		rows, err := manifestContents(s3Client, cfg.InboundBucket, submissionKeyPrefix, manifest)
+		if err != nil {
+			log.Printf("ERROR: manifest %s bad or missing", manifest)
+			done <- false
+			return
+		}
+		itemizedFiles = append(itemizedFiles, rows...)
+	}
+
+	log.Printf("INFO: %d files located in the submission", len(suppliedFiles))
+	log.Printf("INFO: %d files enumerated in %d manifests", len(itemizedFiles), len(manifestList))
+
+	// our enumerated files and the supplied list should be the same size
+	if len(itemizedFiles)+len(manifestList) != len(suppliedFiles) {
+		log.Printf("ERROR: manifests do not match submission")
+		done <- false
+		return
+	}
+
 	// for every file in the submission, attempt to match the S3 signature with the one
 	// reported in the submitted manifest...
 	checksumFailures := 0
-	for _, f := range files {
-		key := fmt.Sprintf("%s/%s/%s", submissionKeyPrefix, f.BagName, f.Name)
+	for _, f := range itemizedFiles {
+		key := fmt.Sprintf("%s/%s/%s", submissionKeyPrefix, f.bag, f.file)
 		log.Printf("DEBUG: validating submission file [%s]...", key)
 
 		res, err := s3Client.s3Head(cfg.InboundBucket, key)
@@ -82,27 +104,46 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 		}
 
 		// trim leading and trailing quote characters
-		str := strings.Trim(*res.ETag, "\"")
+		reportedHash := strings.Trim(*res.ETag, "\"")
 
 		// the ETag for smaller files is the md5 fingerprint, for a multipart upload it is
 		// different so we cannot be sure of a failure so just ignore it
-		if validateChecksum(str, f.Hash) == false {
-			if strings.Contains(str, "-") == true {
+		if reportedHash != f.hash {
+			if strings.Contains(reportedHash, "-") == true {
 				log.Printf("INFO: checksum difference for [%s]", key)
-				log.Printf("INFO: expected [%s], reported [%s] (looks like a multipart, ignoring)", f.Hash, str)
+				log.Printf("INFO: expected [%s], reported [%s] (looks like a multipart, ignoring)", f.hash, reportedHash)
 			} else {
 				log.Printf("ERROR: checksum failure for [%s]", key)
-				log.Printf("ERROR: expected [%s], reported [%s]", f.Hash, str)
+				log.Printf("ERROR: expected [%s], reported [%s]", f.hash, reportedHash)
 				checksumFailures++
 			}
 		}
 	}
 
-	// we are done, publish the appropriate event and terminate
-	if checksumFailures > 0 {
-		_ = publishWorkflowEvent(eventBus, uvaaptsbus.EventSubmissionValidateFail, busEvent.ClientId, wf.SubmissionId, wf.BagId, "")
-	} else {
+	// create our event bus client
+	eventBus, _ := NewEventBus(cfg.BusName, cfg.BusEventSource)
+
+	// no checksum failures, lets build the database
+	if checksumFailures == 0 {
+
+		// create the bags
+		err = createDBBags(dao, manifestList, wf.SubmissionId)
+		if err != nil {
+			done <- false
+			return
+		}
+
+		// create the files
+		err = createDBFiles(dao, itemizedFiles, wf.SubmissionId)
+		if err != nil {
+			done <- false
+			return
+		}
+
+		// we are done, publish the appropriate event and terminate
 		_ = publishWorkflowEvent(eventBus, uvaaptsbus.EventSubmissionReconcile, busEvent.ClientId, wf.SubmissionId, wf.BagId, "")
+	} else {
+		_ = publishWorkflowEvent(eventBus, uvaaptsbus.EventSubmissionValidateFail, busEvent.ClientId, wf.SubmissionId, wf.BagId, "")
 	}
 
 	duration := time.Since(start)
