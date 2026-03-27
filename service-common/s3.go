@@ -53,7 +53,7 @@ func newS3Client(credentials *credentials.StaticCredentialsProvider) (*uvaS3Clie
 
 func (c *uvaS3Client) s3List(bucket string, key string) ([]string, error) {
 
-	log.Printf("INFO: s3 list [%s/%s]", bucket, key)
+	//log.Printf("INFO: s3 list [%s/%s]", bucket, key)
 	start := time.Now()
 
 	// query parameters
@@ -93,7 +93,7 @@ func (c *uvaS3Client) s3List(bucket string, key string) ([]string, error) {
 
 func (c *uvaS3Client) s3Head(bucket string, key string) (*s3.HeadObjectOutput, error) {
 
-	log.Printf("head [%s/%s]", bucket, key)
+	//log.Printf("head [%s/%s]", bucket, key)
 	start := time.Now()
 
 	res, err := c.client.HeadObject(context.TODO(), &s3.HeadObjectInput{
@@ -108,7 +108,7 @@ func (c *uvaS3Client) s3Head(bucket string, key string) (*s3.HeadObjectOutput, e
 
 func (c *uvaS3Client) s3GetAttributes(bucket string, key string, attribs []types.ObjectAttributes) (*s3.GetObjectAttributesOutput, error) {
 
-	log.Printf("get attribs [%s/%s]", bucket, key)
+	//log.Printf("get attribs [%s/%s]", bucket, key)
 	start := time.Now()
 
 	res, err := c.client.GetObjectAttributes(context.TODO(), &s3.GetObjectAttributesInput{
@@ -125,7 +125,7 @@ func (c *uvaS3Client) s3GetAttributes(bucket string, key string, attribs []types
 func (c *uvaS3Client) s3Put(bucket string, key string, location string) error {
 
 	target := fmt.Sprintf("s3://%s/%s", bucket, key)
-	log.Printf("put from %s to %s", location, target)
+	//log.Printf("put from %s to %s", location, target)
 
 	// open the file
 	file, err := os.Open(location)
@@ -161,7 +161,7 @@ func (c *uvaS3Client) s3Put(bucket string, key string, location string) error {
 func (c *uvaS3Client) s3Get(bucket string, key string, location string) error {
 
 	source := fmt.Sprintf("s3://%s/%s", bucket, key)
-	log.Printf("INFO: getting %s to %s", source, location)
+	//log.Printf("INFO: getting %s to %s", source, location)
 
 	file, err := os.OpenFile(location, os.O_RDWR|os.O_CREATE, 0755)
 	if err != nil {
