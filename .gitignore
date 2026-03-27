@@ -7,6 +7,7 @@ package/scripts/build.ksh
 package/scripts/shell.ksh
 
 # ignore common/shared files
+definitions.go
 env.go
 events.go
 helpers.go
