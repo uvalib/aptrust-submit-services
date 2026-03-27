@@ -20,7 +20,7 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 
 	// ensure this is the type of event we want to process
 	switch busEvent.EventName {
-	case uvaaptsbus.EventBagSubmit:
+	case uvaaptsbus.EventBagBuilt:
 	default:
 		log.Printf("ERROR: unexpected event type (%s), ignoring", busEvent.EventName)
 		done <- true
