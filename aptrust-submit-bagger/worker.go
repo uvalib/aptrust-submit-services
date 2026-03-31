@@ -80,6 +80,7 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 
 	// build the bagging attribute structure
 	attribs := BaggingAttributes{
+		SourceOrganization: cfg.SourceOrg,
 		BagGroupIdentifier: sub.CollectionName,
 		Date:               time.Now().UTC().Format("2006-01-02"),
 		Description:        description,

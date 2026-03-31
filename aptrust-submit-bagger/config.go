@@ -19,7 +19,9 @@ type ServiceConfig struct {
 	BusName        string // the event bus name
 	BusEventSource string // the source of published events
 
-	SyncWorkers int32 // the number of s3 sync workers
+	// other definitions
+	SyncWorkers int32  // the number of s3 sync workers
+	SourceOrg   string // the organization as reported to APTrust
 
 	// database configuration
 	DbHost     string // database host
@@ -48,7 +50,9 @@ func LoadConfiguration() *ServiceConfig {
 	cfg.BusName = envWithDefault("EVENT_BUS_NAME", "")
 	cfg.BusEventSource = envWithDefault("EVENT_SRC_NAME", "")
 
+	// other definitions
 	cfg.SyncWorkers = int32(envToInt("SYNC_WORKERS"))
+	cfg.SourceOrg = ensureSetAndNonEmpty("SOURCE_ORGANIZATION")
 
 	// database definitions
 	cfg.DbHost = ensureSetAndNonEmpty("DB_HOST")
@@ -70,7 +74,9 @@ func LoadConfiguration() *ServiceConfig {
 	log.Printf("[CONFIG] BusName         = [%s]", cfg.BusName)
 	log.Printf("[CONFIG] BusEventSource  = [%s]", cfg.BusEventSource)
 
+	// other definitions
 	log.Printf("[CONFIG] SyncWorkers     = [%d]", cfg.SyncWorkers)
+	log.Printf("[CONFIG] SourceOrg       = [%s]", cfg.SourceOrg)
 
 	// database definitions
 	log.Printf("[CONFIG] DbHost          = [%s]", cfg.DbHost)

@@ -34,6 +34,7 @@ var tagFiles = []string{aptrustInfoName, bagInfoName, manifestName}
 
 // attributes required by the templates used in the bagging process
 type BaggingAttributes struct {
+	SourceOrganization string
 	BagGroupIdentifier string
 	Date               string
 	Description        string

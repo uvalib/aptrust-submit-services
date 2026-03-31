@@ -1,4 +1,4 @@
-Source-Organization: virginia.edu
+Source-Organization: {{.SourceOrganization}}
 Bag-Count: 1
 Bagging-Date: {{.Date}}
 Internal-Sender-Description: {{.SenderDescription}}
