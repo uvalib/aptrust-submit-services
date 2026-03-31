@@ -7,12 +7,15 @@ package main
 import (
 	"log"
 	"strings"
+	"time"
 
 	"github.com/uvalib/aptrust-submit-db-dao/uvaaptsdao"
 )
 
 // create the bags in the database
 func createDBBags(dao *uvaaptsdao.Dao, manifestList []string, sid string) error {
+
+	start := time.Now()
 
 	// create the bags
 	for _, m := range manifestList {
@@ -23,11 +26,16 @@ func createDBBags(dao *uvaaptsdao.Dao, manifestList []string, sid string) error 
 			return err
 		}
 	}
+
+	duration := time.Since(start)
+	log.Printf("INFO: DB bags created (elapsed %0.2f seconds)", duration.Seconds())
 	return nil
 }
 
 // create the files in the database
 func createDBFiles(dao *uvaaptsdao.Dao, fileList []ManifestRow, sid string) error {
+
+	start := time.Now()
 
 	// create the files
 	for _, mr := range fileList {
@@ -37,6 +45,9 @@ func createDBFiles(dao *uvaaptsdao.Dao, fileList []ManifestRow, sid string) erro
 			return err
 		}
 	}
+
+	duration := time.Since(start)
+	log.Printf("INFO: DB files created (elapsed %0.2f seconds)", duration.Seconds())
 	return nil
 }
 
