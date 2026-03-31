@@ -48,7 +48,7 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 	defer dao.Close()
 
 	// get all the files that conflict for this submission
-	files, err := dao.GetConflictFilesBySubmission(wf.SubmissionId)
+	conflicts, err := dao.GetConflictFilesBySubmission(wf.SubmissionId)
 	if err != nil {
 		if errors.As(err, &uvaaptsdao.ErrFileNotFound) == false {
 			log.Printf("ERROR: getting submission conflict file set (%s)", err.Error())
@@ -57,52 +57,43 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 		}
 	}
 
-	log.Printf("INFO: %d possible files conflicting", len(files))
+	if len(conflicts) > 0 {
+		log.Printf("INFO: %d possible files conflicting", len(conflicts))
 
-	// for every conflict file in the submission, determine if we can ignore it by checking on the
-	// whitelist
-	failures := make([]uvaaptsdao.File, 0)
-	if files != nil {
-
-		// get our whitelisted file set
-		whitelist, err := dao.GetWhitelistedFiles()
+		// for every conflict file in the submission, determine if we can ignore it by checking on the
+		// whitelist
+		conflicts, err = supressWhitelisted(dao, conflicts)
 		if err != nil {
-			if errors.As(err, &uvaaptsdao.ErrFileNotFound) == false {
-				log.Printf("ERROR: getting whitelist fileset (%s)", err.Error())
-				done <- false
-				return
-			}
+			done <- false
+			return
 		}
 
-		// if we have whitelisted files, we may be able to remove files from the conflict set
-		if whitelist != nil {
-			for _, f := range files {
-				w := inWhitelist(whitelist, f.Hash)
-				if w != nil {
-					log.Printf("INFO: hash found in whitelist fileset, ignoring [%s] (%s)", f.Name, w.Comment)
-					continue
+		// then determine if we can ignore it because it is duplicating a previously submitted
+		// bag
+		conflicts, err = supressBagDuplicates(dao, conflicts)
+		if err != nil {
+			done <- false
+			return
+		}
+
+		// if conflicts remain
+		if len(conflicts) > 0 {
+			for _, f := range conflicts {
+				log.Printf("WARNING: unsuppressed conflict for <%s/%s>", f.BagName, f.Name)
+				err = trackConflict(dao, f)
+				if err != nil {
+					if errors.As(err, &uvaaptsdao.ErrFileNotFound) == false {
+						log.Printf("ERROR: adding conflict reference (%s)", err.Error())
+						//done <- false
+						//return
+					}
 				}
-				failures = append(failures, f)
 			}
+			_ = publishWorkflowEvent(eventBus, uvaaptsbus.EventSubmissionReconcileFail, busEvent.ClientId, wf.SubmissionId, wf.BagId, "")
 		} else {
-			failures = files
+			log.Printf("INFO: all file conflicts for submission have been ignored")
+			_ = publishWorkflowEvent(eventBus, uvaaptsbus.EventSubmissionApprove, busEvent.ClientId, wf.SubmissionId, wf.BagId, "")
 		}
-	}
-
-	// we are done, publish the appropriate event and terminate
-	if len(failures) > 0 {
-		for _, f := range failures {
-			log.Printf("WARNING: unsuppressed conflict for <%s/%s>", f.BagName, f.Name)
-			err = trackConflict(dao, f)
-			if err != nil {
-				if errors.As(err, &uvaaptsdao.ErrFileNotFound) == false {
-					log.Printf("ERROR: adding conflict reference (%s)", err.Error())
-					//done <- false
-					//return
-				}
-			}
-		}
-		_ = publishWorkflowEvent(eventBus, uvaaptsbus.EventSubmissionReconcileFail, busEvent.ClientId, wf.SubmissionId, wf.BagId, "")
 	} else {
 		log.Printf("INFO: no conflicting files found for submission")
 		_ = publishWorkflowEvent(eventBus, uvaaptsbus.EventSubmissionApprove, busEvent.ClientId, wf.SubmissionId, wf.BagId, "")
@@ -111,15 +102,6 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 	duration := time.Since(start)
 	log.Printf("INFO: worker terminating (elapsed %0.2f seconds)", duration.Seconds())
 	done <- true
-}
-
-func inWhitelist(whitelist []uvaaptsdao.WhitelistedFile, hash string) *uvaaptsdao.WhitelistedFile {
-	for _, w := range whitelist {
-		if w.Hash == hash {
-			return &w
-		}
-	}
-	return nil
 }
 
 //
