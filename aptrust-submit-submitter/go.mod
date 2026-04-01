@@ -5,8 +5,8 @@ go 1.26.0
 require (
 	github.com/aws/aws-sdk-go-v2/config v1.32.13
 	github.com/aws/aws-sdk-go-v2/credentials v1.19.13
-	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.22.10
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.97.3
+	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.22.11
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.98.0
 	github.com/aws/aws-sdk-go-v2/service/sqs v1.42.25
 	github.com/uvalib/aptrust-submit-bus-definitions/uvaaptsbus v0.0.0-20260316181657-60b3597dab4a
 )
