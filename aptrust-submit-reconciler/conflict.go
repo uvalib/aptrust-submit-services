@@ -6,7 +6,7 @@ import (
 	"github.com/uvalib/aptrust-submit-db-dao/uvaaptsdao"
 )
 
-func trackConflict(dao *uvaaptsdao.Dao, file uvaaptsdao.File) error {
+func recordConflict(dao *uvaaptsdao.Dao, file uvaaptsdao.File) error {
 
 	// initially assume the conflict is with an APTrust file
 	aptConflicts, err := dao.GetAptFilesByHash(file.Hash)
