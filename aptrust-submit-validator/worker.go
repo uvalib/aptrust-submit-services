@@ -72,7 +72,9 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 	for _, manifest := range manifestList {
 		rows, err := manifestContents(s3Client, cfg.InboundBucket, submissionKeyPrefix, manifest)
 		if err != nil {
-			log.Printf("ERROR: manifest %s bad or missing", manifest)
+			failureReason := fmt.Sprintf("manifest %s is bad or missing", manifest)
+			log.Printf("ERROR: %s", failureReason)
+			_ = recordFailure(dao, wf.SubmissionId, failureReason)
 			done <- false
 			return
 		}
@@ -84,7 +86,9 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 
 	// our enumerated files and the supplied list should be the same size
 	if len(itemizedFiles)+len(manifestList) != len(suppliedFiles) {
-		log.Printf("ERROR: manifests do not match submission")
+		failureReason := fmt.Sprintf("manifests do not match submission")
+		log.Printf("ERROR: %s", failureReason)
+		_ = recordFailure(dao, wf.SubmissionId, failureReason)
 		done <- false
 		return
 	}
@@ -113,8 +117,9 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 				log.Printf("INFO: checksum difference for [%s]", key)
 				log.Printf("INFO: expected [%s], reported [%s] (looks like a multipart, ignoring)", f.hash, reportedHash)
 			} else {
-				log.Printf("ERROR: checksum failure for [%s]", key)
-				log.Printf("ERROR: expected [%s], reported [%s]", f.hash, reportedHash)
+				failureReason := fmt.Sprintf("checksum failure for [%s]; expected [%s], reported [%s]", key, f.hash, reportedHash)
+				log.Printf("ERROR: %s", failureReason)
+				_ = recordFailure(dao, wf.SubmissionId, failureReason)
 				checksumFailures++
 			}
 		}
