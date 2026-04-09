@@ -79,15 +79,7 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 		// if conflicts remain
 		if len(conflicts) > 0 {
 			for _, f := range conflicts {
-				log.Printf("WARNING: unsuppressed conflict for <%s/%s>", f.BagName, f.Name)
-				err = recordConflict(dao, f)
-				if err != nil {
-					if errors.As(err, &uvaaptsdao.ErrFileNotFound) == false {
-						log.Printf("ERROR: adding conflict reference (%s)", err.Error())
-						//done <- false
-						//return
-					}
-				}
+				_ = recordConflict(dao, f)
 			}
 			_ = publishWorkflowEvent(eventBus, uvaaptsbus.EventSubmissionReconcileFail, busEvent.ClientId, wf.SubmissionId, wf.BagId, "")
 		} else {

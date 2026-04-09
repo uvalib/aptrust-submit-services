@@ -11,18 +11,22 @@ func recordConflict(dao *uvaaptsdao.Dao, file uvaaptsdao.File) error {
 	// initially assume the conflict is with an APTrust file
 	aptConflicts, err := dao.GetAptFilesByHash(file.Hash)
 	if err != nil {
-		//if errors.As(err, &uvaaptsdao.ErrFileNotFound) == false {
+		log.Printf("ERROR: getting apt conflicts (%s)", err.Error())
 		return err
-		//}
 	}
 
-	// assume the first conflict in the event that we have more than one
-	conflict := aptConflicts[0]
-	if len(aptConflicts) > 1 {
-		log.Printf("WARNING: multiple APTrust hash conflicts for <%s/%s>, tracking the first", file.BagName, file.Name)
+	log.Printf("WARNING: %d unsuppressed conflict(s) for <%s/%s>", len(aptConflicts), file.BagName, file.Name)
+
+	for ix, conflict := range aptConflicts {
+		log.Printf("WARNING: conflict %d: <%s/%s>", ix+1, conflict.BagName, conflict.Name)
+		err = dao.AddConflict(file.Submission, file.Id, "aptrust", conflict.Id)
+		if err != nil {
+			log.Printf("ERROR: adding conflict record (%s)", err.Error())
+			return err
+		}
 	}
 
-	return dao.AddConflict(file.Submission, file.Id, "aptrust", conflict.Id)
+	return nil
 }
 
 //
