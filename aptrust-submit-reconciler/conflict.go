@@ -15,10 +15,10 @@ func recordConflict(dao *uvaaptsdao.Dao, file uvaaptsdao.File) error {
 		return err
 	}
 
-	log.Printf("WARNING: %d unsuppressed conflict(s) for <%s/%s>", len(aptConflicts), file.BagName, file.Name)
+	log.Printf("WARNING: %d unsuppressed conflict(s) for <%s:%s>", len(aptConflicts), file.BagName, file.Name)
 
 	for ix, conflict := range aptConflicts {
-		log.Printf("WARNING: conflict %d: <%s/%s>", ix+1, conflict.BagName, conflict.Name)
+		log.Printf("WARNING: conflict %d: <%s:%s>", ix+1, conflict.BagName, conflict.Name)
 		err = dao.AddConflict(file.Submission, file.Id, "aptrust", conflict.Id)
 		if err != nil {
 			log.Printf("ERROR: adding conflict record (%s)", err.Error())

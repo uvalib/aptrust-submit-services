@@ -47,6 +47,9 @@ func supressBagDuplicates(dao *uvaaptsdao.Dao, conflicts []uvaaptsdao.File) ([]u
 // APTrust bag names have the source organization prepended so we look for the local bag name
 // as the suffix
 func sameBag(localBn string, aptBn string) bool {
+
+	log.Printf("DEBUG: checking for dups; local [%s], apt [%s]", localBn, aptBn)
+
 	return strings.HasSuffix(aptBn, localBn)
 }
 
