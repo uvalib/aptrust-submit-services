@@ -97,6 +97,9 @@ func updateManifest(root string, filename string) error {
 
 	newContents := ""
 	for _, line := range contents {
+		if len(line) == 0 {
+			continue
+		}
 		tok := strings.SplitN(line, " ", 2)
 		if len(tok) == 2 {
 			fp := tok[0]
