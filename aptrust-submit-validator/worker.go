@@ -33,6 +33,7 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 	}
 
 	log.Printf("INFO: event %s/%s", busEvent.String(), wf.String())
+	log.Printf("INFO: processing submission [%s]", wf.SubmissionId)
 
 	// create the data access object
 	dao, err := uvaaptsdao.NewDao(cfg.DbHost, cfg.DbPort, cfg.DbUser, cfg.DbPassword, cfg.DbName)
@@ -146,13 +147,15 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 		}
 
 		// we are done, publish the appropriate event and terminate
+		log.Printf("INFO: no problems found for submission [%s]", wf.SubmissionId)
 		_ = publishWorkflowEvent(eventBus, uvaaptsbus.EventSubmissionReconcile, busEvent.ClientId, wf.SubmissionId, wf.BagId, "")
 	} else {
+		log.Printf("WARNING: submission [%s] FAILS validation", wf.SubmissionId)
 		_ = publishWorkflowEvent(eventBus, uvaaptsbus.EventSubmissionValidateFail, busEvent.ClientId, wf.SubmissionId, wf.BagId, "")
 	}
 
 	duration := time.Since(start)
-	log.Printf("INFO: worker terminating (elapsed %0.2f seconds)", duration.Seconds())
+	log.Printf("INFO: worker terminating (elapsed %d ms)", duration.Milliseconds())
 	done <- true
 }
 

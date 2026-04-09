@@ -32,6 +32,7 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 	}
 
 	log.Printf("INFO: event %s/%s", busEvent.String(), wf.String())
+	log.Printf("INFO: processing submission [%s]", wf.SubmissionId)
 
 	// create our event bus client
 	eventBus, _ := NewEventBus(cfg.BusName, cfg.BusEventSource)
@@ -81,18 +82,19 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 			for _, f := range conflicts {
 				_ = recordConflict(dao, f)
 			}
+			log.Printf("WARNING: submission [%s] FAILS reconciliation", wf.SubmissionId)
 			_ = publishWorkflowEvent(eventBus, uvaaptsbus.EventSubmissionReconcileFail, busEvent.ClientId, wf.SubmissionId, wf.BagId, "")
 		} else {
-			log.Printf("INFO: all file conflicts for submission have been ignored")
+			log.Printf("INFO: all conflicts for submission [%s] have been ignored", wf.SubmissionId)
 			_ = publishWorkflowEvent(eventBus, uvaaptsbus.EventSubmissionApprove, busEvent.ClientId, wf.SubmissionId, wf.BagId, "")
 		}
 	} else {
-		log.Printf("INFO: no conflicting files found for submission")
+		log.Printf("INFO: no conflicts found for submission [%s]", wf.SubmissionId)
 		_ = publishWorkflowEvent(eventBus, uvaaptsbus.EventSubmissionApprove, busEvent.ClientId, wf.SubmissionId, wf.BagId, "")
 	}
 
 	duration := time.Since(start)
-	log.Printf("INFO: worker terminating (elapsed %0.2f seconds)", duration.Seconds())
+	log.Printf("INFO: worker terminating (elapsed %d ms)", duration.Milliseconds())
 	done <- true
 }
 

@@ -41,7 +41,7 @@ func syncAssets(bucket string, path string, local string, workers int32) error {
 
 	stats := syncManager.GetStatistics()
 	duration := time.Since(start)
-	log.Printf("INFO: sync completed (elapsed %0.2f seconds)", duration.Seconds())
+	log.Printf("INFO: sync completed (elapsed %d ms)", duration.Milliseconds())
 	log.Printf("INFO: %d bytes written, %d files downloaded, %d files deleted", stats.Bytes, stats.Files, stats.DeletedFiles)
 
 	return nil

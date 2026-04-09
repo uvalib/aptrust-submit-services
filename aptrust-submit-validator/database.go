@@ -28,7 +28,7 @@ func createDBBags(dao *uvaaptsdao.Dao, manifestList []string, sid string) error 
 	}
 
 	duration := time.Since(start)
-	log.Printf("INFO: DB bags created (elapsed %0.2f seconds)", duration.Seconds())
+	log.Printf("INFO: DB bags created (elapsed %d ms)", duration.Milliseconds())
 	return nil
 }
 
@@ -47,7 +47,7 @@ func createDBFiles(dao *uvaaptsdao.Dao, fileList []ManifestRow, sid string) erro
 	}
 
 	duration := time.Since(start)
-	log.Printf("INFO: DB files created (elapsed %0.2f seconds)", duration.Seconds())
+	log.Printf("INFO: DB files created (elapsed %d ms)", duration.Milliseconds())
 	return nil
 }
 

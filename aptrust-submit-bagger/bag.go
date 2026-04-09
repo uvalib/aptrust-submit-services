@@ -175,7 +175,7 @@ func makeTarfile(root string, bagname string, outfile string) error {
 		log.Printf("INFO: command output [%s]", string(res))
 	}
 	duration := time.Since(start)
-	log.Printf("INFO: tar completed (elapsed %0.2f seconds)", duration.Seconds())
+	log.Printf("INFO: tar completed (elapsed %d ms)", duration.Milliseconds())
 	return err
 }
 

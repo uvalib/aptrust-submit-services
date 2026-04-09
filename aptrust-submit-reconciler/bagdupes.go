@@ -32,7 +32,7 @@ func supressBagDuplicates(dao *uvaaptsdao.Dao, conflicts []uvaaptsdao.File) ([]u
 		if len(aptConflicts) > 0 {
 			for _, aptcf := range aptConflicts {
 				if sameBag(cf.BagName, aptcf.BagName) == true {
-					log.Printf("INFO: duplicate hash from duplicate bag, ignoring [%s]", cf.Name)
+					log.Printf("INFO: duplicate hash from duplicate bag, ignoring <%s:%s>", cf.BagName, cf.Name)
 				} else {
 					remaining = append(remaining, cf)
 				}
