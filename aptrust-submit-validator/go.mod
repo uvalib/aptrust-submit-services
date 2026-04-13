@@ -9,7 +9,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.99.0
 	github.com/aws/aws-sdk-go-v2/service/sqs v1.42.25
 	github.com/uvalib/aptrust-submit-bus-definitions/uvaaptsbus v0.0.0-20260408145629-63e65369a282
-	github.com/uvalib/aptrust-submit-db-dao/uvaaptsdao v0.0.0-20260406115747-e2cb828f399f
+	github.com/uvalib/aptrust-submit-db-dao/uvaaptsdao v0.0.0-20260413174246-20349a08e33d
 )
 
 // for local development
