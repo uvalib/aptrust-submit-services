@@ -48,8 +48,8 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 	// cleanup on exit
 	defer dao.Close()
 
-	// get all the files that conflict for this submission
-	conflicts, err := dao.GetConflictFilesBySubmission(wf.SubmissionId)
+	// get all the files from this submission that have hash conflicts
+	filesWithConflicts, err := dao.GetConflictFilesBySubmission(wf.SubmissionId)
 	if err != nil {
 		if errors.As(err, &uvaaptsdao.ErrFileNotFound) == false {
 			log.Printf("ERROR: getting submission conflict file set (%s)", err.Error())
@@ -58,34 +58,62 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 		}
 	}
 
-	if len(conflicts) > 0 {
-		log.Printf("INFO: %d possible files conflicting", len(conflicts))
+	// if we have files with conflicts
+	if len(filesWithConflicts) > 0 {
+		log.Printf("INFO: %d possible file(s) with conflicts", len(filesWithConflicts))
 
-		// for every conflict file in the submission, determine if we can ignore it by checking on the
-		// whitelist
-		conflicts, err = supressWhitelisted(dao, conflicts)
+		// for every conflict file in the submission, determine if we can ignore it by
+		// checking on the hash allow list
+		filesWithConflicts, err = supressHashAllow(dao, filesWithConflicts)
 		if err != nil {
 			done <- false
 			return
 		}
 
-		// then determine if we can ignore it because it is duplicating a previously submitted
-		// bag
-		conflicts, err = supressBagDuplicates(dao, conflicts)
-		if err != nil {
-			done <- false
-			return
-		}
+		// do we still have conflicts
+		if len(filesWithConflicts) > 0 {
 
-		// if conflicts remain
-		if len(conflicts) > 0 {
-			for _, f := range conflicts {
-				_ = recordConflict(dao, f)
+			// we have a list of files where conflicts exist so now generate a complete list of
+			// the conflicts. A file in our conflict list will have one or more conflicts.
+			conflictSet, err := generateConflictSet(dao, filesWithConflicts)
+			if err != nil {
+				done <- false
+				return
 			}
-			log.Printf("WARNING: submission [%s] FAILS reconciliation", wf.SubmissionId)
-			_ = publishWorkflowEvent(eventBus, uvaaptsbus.EventSubmissionReconcileFail, busEvent.ClientId, wf.SubmissionId, wf.BagId, "")
+
+			// suppress conflicts because they are from a previously submitted
+			// bag
+			conflictSet, err = supressBagDuplicates(dao, conflictSet)
+			if err != nil {
+				done <- false
+				return
+			}
+
+			// suppress conflicts because they come from bags we have determined are
+			// rubbish
+			conflictSet, err = supressBagAllow(dao, conflictSet)
+			if err != nil {
+				done <- false
+				return
+			}
+
+			//
+			// more suppressions here
+			//
+
+			// if conflicts remain
+			if len(conflictSet) > 0 {
+				for _, f := range conflictSet {
+					_ = recordConflict(dao, f)
+				}
+				log.Printf("WARNING: submission [%s] FAILS reconciliation", wf.SubmissionId)
+				_ = publishWorkflowEvent(eventBus, uvaaptsbus.EventSubmissionReconcileFail, busEvent.ClientId, wf.SubmissionId, wf.BagId, "")
+			} else {
+				log.Printf("INFO: all conflicts for submission [%s] have been ignored", wf.SubmissionId)
+				_ = publishWorkflowEvent(eventBus, uvaaptsbus.EventSubmissionApprove, busEvent.ClientId, wf.SubmissionId, wf.BagId, "")
+			}
 		} else {
-			log.Printf("INFO: all conflicts for submission [%s] have been ignored", wf.SubmissionId)
+			log.Printf("INFO: all conflicts for submission [%s] have been suppressed", wf.SubmissionId)
 			_ = publishWorkflowEvent(eventBus, uvaaptsbus.EventSubmissionApprove, busEvent.ClientId, wf.SubmissionId, wf.BagId, "")
 		}
 	} else {
