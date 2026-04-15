@@ -54,6 +54,9 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 		return
 	}
 
+	// create our event bus client
+	eventBus, _ := NewEventBus(cfg.BusName, cfg.BusEventSource)
+
 	// S3 assets in <bucket>/<clientId>/<submissionId>/...
 	submissionKeyPrefix := fmt.Sprintf("%s/%s", busEvent.ClientId, wf.SubmissionId)
 
@@ -76,7 +79,10 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 			failureReason := fmt.Sprintf("manifest %s is bad or missing", manifest)
 			log.Printf("ERROR: %s", failureReason)
 			_ = recordFailure(dao, wf.SubmissionId, failureReason)
-			done <- false
+			logAndPublishFailure(eventBus, busEvent.ClientId, wf.SubmissionId)
+			duration := time.Since(start)
+			log.Printf("INFO: worker terminating (elapsed %d ms)", duration.Milliseconds())
+			done <- true // this is an acceptable failure so we do not want to reprocess this message
 			return
 		}
 		itemizedFiles = append(itemizedFiles, rows...)
@@ -90,7 +96,10 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 		failureReason := fmt.Sprintf("manifests do not match submission")
 		log.Printf("ERROR: %s", failureReason)
 		_ = recordFailure(dao, wf.SubmissionId, failureReason)
-		done <- false
+		logAndPublishFailure(eventBus, busEvent.ClientId, wf.SubmissionId)
+		duration := time.Since(start)
+		log.Printf("INFO: worker terminating (elapsed %d ms)", duration.Milliseconds())
+		done <- true // this is an acceptable failure so we do not want to reprocess this message
 		return
 	}
 
@@ -126,9 +135,6 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 		}
 	}
 
-	// create our event bus client
-	eventBus, _ := NewEventBus(cfg.BusName, cfg.BusEventSource)
-
 	// no checksum failures, lets build the database
 	if checksumFailures == 0 {
 
@@ -150,13 +156,17 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 		log.Printf("INFO: no problems found for submission [%s]", wf.SubmissionId)
 		_ = publishWorkflowEvent(eventBus, uvaaptsbus.EventSubmissionReconcile, busEvent.ClientId, wf.SubmissionId, wf.BagId, "")
 	} else {
-		log.Printf("WARNING: submission [%s] FAILS validation", wf.SubmissionId)
-		_ = publishWorkflowEvent(eventBus, uvaaptsbus.EventSubmissionValidateFail, busEvent.ClientId, wf.SubmissionId, wf.BagId, "")
+		logAndPublishFailure(eventBus, busEvent.ClientId, wf.SubmissionId)
 	}
 
 	duration := time.Since(start)
 	log.Printf("INFO: worker terminating (elapsed %d ms)", duration.Milliseconds())
 	done <- true
+}
+
+func logAndPublishFailure(eventBus uvaaptsbus.UvaBus, cid string, sid string) {
+	log.Printf("WARNING: submission [%s] FAILS validation", sid)
+	_ = publishWorkflowEvent(eventBus, uvaaptsbus.EventSubmissionValidateFail, cid, sid, "", "")
 }
 
 //
