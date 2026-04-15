@@ -36,7 +36,7 @@ func generateConflictSet(dao *uvaaptsdao.Dao, conflicts []uvaaptsdao.File) ([]Co
 
 func recordConflict(dao *uvaaptsdao.Dao, conflict ConflictTuple) error {
 
-	log.Printf("WARNING: %d conflicts for <%s:%s>", len(conflict.conflicts), conflict.local.BagName, conflict.local.Name)
+	log.Printf("WARNING: %d conflicts for <%s:%s> (hash: %s)", len(conflict.conflicts), conflict.local.BagName, conflict.local.Name, conflict.local.Hash)
 
 	for ix, c := range conflict.conflicts {
 		log.Printf("WARNING: conflict %d: <%s:%s>", ix+1, c.BagName, c.Name)
