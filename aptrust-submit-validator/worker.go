@@ -138,6 +138,10 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 	// no checksum failures, lets build the database
 	if checksumFailures == 0 {
 
+		// TEMP ONLY
+		fmt.Printf("INFO: SLEEPING for 15 minutes for testing... zzzzzzzzzz")
+		time.Sleep(15 * time.Minute)
+
 		// create the bags
 		err = createDBBags(dao, manifestList, wf.SubmissionId)
 		if err != nil {
