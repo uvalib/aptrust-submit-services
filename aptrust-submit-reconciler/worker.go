@@ -49,7 +49,7 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 	defer dao.Close()
 
 	// get all the files from this submission that have hash conflicts
-	filesWithConflicts, err := dao.GetConflictFilesBySubmission(wf.SubmissionId)
+	filesWithConflicts, err := dao.GetAptHashConflictsBySubmission(wf.SubmissionId)
 	if err != nil {
 		if errors.As(err, &uvaaptsdao.ErrFileNotFound) == false {
 			log.Printf("ERROR: getting submission conflict file set (%s)", err.Error())
