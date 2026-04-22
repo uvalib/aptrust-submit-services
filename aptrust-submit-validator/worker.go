@@ -136,8 +136,8 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 	}
 
 	// TEMP ONLY
-	log.Printf("INFO: SLEEPING for 8 minutes for testing... zzzzzzzzzz")
-	time.Sleep(8 * time.Minute)
+	//log.Printf("INFO: SLEEPING for 8 minutes for testing... zzzzzzzzzz")
+	//time.Sleep(8 * time.Minute)
 
 	// no checksum failures, lets build the database
 	if checksumFailures == 0 {
