@@ -32,4 +32,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.35.20 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.42.0 // indirect
 	github.com/aws/smithy-go v1.25.1 // indirect
+	github.com/lib/pq v1.12.0 // indirect
+	github.com/uvalib/aptrust-submit-db-dao/uvaaptsdao v0.0.0-20260427185659-3fc05c86b686 // indirect
 )
