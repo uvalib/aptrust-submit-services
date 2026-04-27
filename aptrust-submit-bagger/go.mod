@@ -7,7 +7,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sqs v1.42.26
 	github.com/seqsense/s3sync/v2 v2.0.0
 	github.com/uvalib/aptrust-submit-bus-definitions/uvaaptsbus v0.0.0-20260427134036-112f80baa79f
-	github.com/uvalib/aptrust-submit-db-dao/uvaaptsdao v0.0.0-20260427185659-3fc05c86b686
+	github.com/uvalib/aptrust-submit-db-dao/uvaaptsdao v0.0.0-20260427193203-dbfec7bf0db1
 )
 
 // for local development
