@@ -106,7 +106,7 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 	// for every file in the submission, attempt to match the S3 signature with the one
 	// reported in the submitted manifest...
 	checksumFailures := 0
-	for _, f := range itemizedFiles {
+	for ix, f := range itemizedFiles {
 		key := fmt.Sprintf("%s/%s/%s", submissionKeyPrefix, f.bag, f.file)
 		log.Printf("DEBUG: validating submission file [%s]...", key)
 
@@ -116,6 +116,9 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 			done <- false
 			return
 		}
+
+		// update the size
+		itemizedFiles[ix].size = *res.ContentLength
 
 		// trim leading and trailing quote characters
 		reportedHash := strings.Trim(*res.ETag, "\"")
@@ -134,10 +137,6 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 			}
 		}
 	}
-
-	// TEMP ONLY
-	//log.Printf("INFO: SLEEPING for 8 minutes for testing... zzzzzzzzzz")
-	//time.Sleep(8 * time.Minute)
 
 	// no checksum failures, lets build the database
 	if checksumFailures == 0 {

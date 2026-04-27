@@ -14,6 +14,7 @@ import (
 type ManifestRow struct {
 	hash string
 	file string
+	size int64
 	bag  string
 }
 

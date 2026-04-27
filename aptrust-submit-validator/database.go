@@ -39,8 +39,7 @@ func createDBFiles(dao *uvaaptsdao.Dao, fileList []ManifestRow, sid string) erro
 
 	// create the files
 	for _, mr := range fileList {
-		// FIXME
-		err := dao.AddFile(mr.file, mr.bag, sid, mr.hash, 9999)
+		err := dao.AddFile(mr.file, mr.bag, sid, mr.hash, mr.size)
 		if err != nil {
 			log.Printf("ERROR: adding file to database (%s)", err.Error())
 			return err
