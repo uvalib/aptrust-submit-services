@@ -5,8 +5,8 @@ go 1.26.0
 require (
 	github.com/aws/aws-sdk-go-v2/config v1.32.16
 	github.com/aws/aws-sdk-go-v2/service/sqs v1.42.26
-	github.com/uvalib/aptrust-submit-bus-definitions/uvaaptsbus v0.0.0-20260416141430-5517dd05fe30
-	github.com/uvalib/aptrust-submit-db-dao/uvaaptsdao v0.0.0-20260415184441-88e4458b0ef4
+	github.com/uvalib/aptrust-submit-bus-definitions/uvaaptsbus v0.0.0-20260427134036-112f80baa79f
+	github.com/uvalib/aptrust-submit-db-dao/uvaaptsdao v0.0.0-20260427134003-8b023303f9ff
 )
 
 // for local development
@@ -27,6 +27,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sso v1.30.16 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.35.20 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.42.0 // indirect
-	github.com/aws/smithy-go v1.25.0 // indirect
+	github.com/aws/smithy-go v1.25.1 // indirect
 	github.com/lib/pq v1.12.3 // indirect
 )
