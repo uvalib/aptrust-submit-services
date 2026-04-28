@@ -7,42 +7,34 @@ package main
 import (
 	"log"
 	"strings"
-
-	"github.com/uvalib/aptrust-submit-db-dao/uvaaptsdao"
 )
 
-func supressBagDuplicates(dao *uvaaptsdao.Dao, conflictSet []ConflictTuple) ([]ConflictTuple, error) {
+func ignoreBagDuplicates(conflictSeries *ConflictSeries) (*ConflictSeries, error) {
 
 	// sanity check
-	if len(conflictSet) == 0 {
-		return conflictSet, nil
+	if conflictSeries.outstanding() == false {
+		return conflictSeries, nil
 	}
-
-	remainingSet := make([]ConflictTuple, 0)
 
 	// see if we can remove any conflicts due to bag duplicates
-	for _, cfs := range conflictSet {
+	for ix, csc := range conflictSeries.conflicts {
 
-		log.Printf("DEBUG: evaluating <%s:%s> for bag duplicates", cfs.local.BagName, cfs.local.Name)
-
-		remaining := make([]uvaaptsdao.File, 0)
-		for _, c := range cfs.conflicts {
-			if sameBag(cfs.local.BagName, c.BagName) == true {
-				log.Printf("INFO: duplicate hash from duplicate bag, ignoring <%s:%s>", c.BagName, c.Name)
-			} else {
-				remaining = append(remaining, c)
-			}
+		// no processing required for already ignored files
+		if csc.localFile.ignored == true {
+			continue
 		}
 
-		if len(remaining) > 0 {
-			ct := ConflictTuple{
-				local:     cfs.local,
-				conflicts: remaining,
+		log.Printf("DEBUG: evaluating <%s:%s> for bag duplicates", csc.localFile.file.BagName, csc.localFile.file.Name)
+
+		for iy, pc := range csc.possibleConflicts {
+			if sameBag(csc.localFile.file.BagName, pc.file.BagName) == true {
+				log.Printf("INFO: duplicate hash from duplicate bag, ignoring <%s:%s>", pc.file.BagName, pc.file.Name)
+				conflictSeries.conflicts[ix].possibleConflicts[iy].ignored = true
 			}
-			remainingSet = append(remainingSet, ct)
 		}
 	}
-	return remainingSet, nil
+
+	return conflictSeries, nil
 }
 
 // APTrust bag names have the source organization prepended so we look for the local bag name

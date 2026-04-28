@@ -11,15 +11,15 @@ import (
 	"github.com/uvalib/aptrust-submit-db-dao/uvaaptsdao"
 )
 
-func supressBagAllow(dao *uvaaptsdao.Dao, conflictSet []ConflictTuple) ([]ConflictTuple, error) {
+func ignoreBagAllow(conflictSeries *ConflictSeries) (*ConflictSeries, error) {
 
 	// sanity check
-	if len(conflictSet) == 0 {
-		return conflictSet, nil
+	if conflictSeries.outstanding() == false {
+		return conflictSeries, nil
 	}
 
 	// get our bag allow list set
-	bagAllowList, err := dao.GetBagAllowList()
+	bagAllowList, err := conflictSeries.dao.GetBagAllowList()
 	if err != nil {
 		if errors.As(err, &uvaaptsdao.ErrBagNotFound) == false {
 			log.Printf("ERROR: getting bag allow list (%s)", err.Error())
@@ -32,34 +32,26 @@ func supressBagAllow(dao *uvaaptsdao.Dao, conflictSet []ConflictTuple) ([]Confli
 
 		log.Printf("INFO: %d bag allow/ignore entries", len(bagAllowList))
 
-		remainingSet := make([]ConflictTuple, 0)
-
 		// see if we can remove any conflicts due to bag allows
-		for _, cfs := range conflictSet {
+		for ix, csc := range conflictSeries.conflicts {
 
-			log.Printf("DEBUG: evaluating <%s:%s> for bag allow", cfs.local.BagName, cfs.local.Name)
-
-			remaining := make([]uvaaptsdao.File, 0)
-			for _, c := range cfs.conflicts {
-				if inBagAllowList(bagAllowList, c.BagName) == true {
-					log.Printf("INFO: conflict in bag allow/ignore, ignoring <%s:%s>", c.BagName, c.Name)
-				} else {
-					remaining = append(remaining, c)
-				}
+			// no processing required for already ignored files
+			if csc.localFile.ignored == true {
+				continue
 			}
 
-			if len(remaining) > 0 {
-				ct := ConflictTuple{
-					local:     cfs.local,
-					conflicts: remaining,
+			log.Printf("DEBUG: evaluating <%s:%s> for bag allow", csc.localFile.file.BagName, csc.localFile.file.Name)
+
+			for iy, pc := range csc.possibleConflicts {
+				if inBagAllowList(bagAllowList, pc.file.BagName) == true {
+					log.Printf("INFO: conflict in bag allow/ignore, ignoring <%s:%s>", pc.file.BagName, pc.file.Name)
+					conflictSeries.conflicts[ix].possibleConflicts[iy].ignored = true
 				}
-				remainingSet = append(remainingSet, ct)
 			}
 		}
-		return remainingSet, nil
 	}
 
-	return conflictSet, nil
+	return conflictSeries, nil
 }
 
 func inBagAllowList(allowlist []uvaaptsdao.BagAllowEntry, name string) bool {
