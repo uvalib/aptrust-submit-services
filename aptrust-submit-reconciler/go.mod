@@ -6,7 +6,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.32.16
 	github.com/aws/aws-sdk-go-v2/service/sqs v1.42.26
 	github.com/uvalib/aptrust-submit-bus-definitions/uvaaptsbus v0.0.0-20260427134036-112f80baa79f
-	github.com/uvalib/aptrust-submit-db-dao/uvaaptsdao v0.0.0-20260428154313-337281ed1f15
+	github.com/uvalib/aptrust-submit-db-dao/uvaaptsdao v0.0.0-20260428175519-052ec7690ea3
 )
 
 // for local development
