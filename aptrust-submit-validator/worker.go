@@ -68,8 +68,32 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 		return
 	}
 
+	// no files supplied is an error
+	if len(suppliedFiles) == 0 {
+		failureReason := fmt.Sprintf("no manifest(s) supplied for submission")
+		log.Printf("ERROR: %s", failureReason)
+		_ = recordFailure(dao, wf.SubmissionId, failureReason)
+		logAndPublishFailure(eventBus, busEvent.ClientId, wf.SubmissionId)
+		duration := time.Since(start)
+		log.Printf("INFO: worker terminating (elapsed %d ms)", duration.Milliseconds())
+		done <- true // this is a permanent failure so we do not want to reprocess this message
+		return
+	}
+
 	// get all the bags and manifests included in the supplied files
 	manifestList := findIncludedManifests(submissionKeyPrefix, suppliedFiles)
+
+	// no manifests supplied is an error
+	if len(manifestList) == 0 {
+		failureReason := fmt.Sprintf("no manifest(s) supplied for submission")
+		log.Printf("ERROR: %s", failureReason)
+		_ = recordFailure(dao, wf.SubmissionId, failureReason)
+		logAndPublishFailure(eventBus, busEvent.ClientId, wf.SubmissionId)
+		duration := time.Since(start)
+		log.Printf("INFO: worker terminating (elapsed %d ms)", duration.Milliseconds())
+		done <- true // this is a permanent failure so we do not want to reprocess this message
+		return
+	}
 
 	// get an enumeration of all the files specified in the manifests
 	itemizedFiles := make([]ManifestRow, 0)
@@ -82,7 +106,7 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 			logAndPublishFailure(eventBus, busEvent.ClientId, wf.SubmissionId)
 			duration := time.Since(start)
 			log.Printf("INFO: worker terminating (elapsed %d ms)", duration.Milliseconds())
-			done <- true // this is an acceptable failure so we do not want to reprocess this message
+			done <- true // this is a permanent failure so we do not want to reprocess this message
 			return
 		}
 		itemizedFiles = append(itemizedFiles, rows...)
@@ -99,7 +123,7 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 		logAndPublishFailure(eventBus, busEvent.ClientId, wf.SubmissionId)
 		duration := time.Since(start)
 		log.Printf("INFO: worker terminating (elapsed %d ms)", duration.Milliseconds())
-		done <- true // this is an acceptable failure so we do not want to reprocess this message
+		done <- true // this is a permanent failure so we do not want to reprocess this message
 		return
 	}
 
