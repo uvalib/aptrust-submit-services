@@ -70,7 +70,7 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 
 	// no files supplied is an error
 	if len(suppliedFiles) == 0 {
-		failureReason := fmt.Sprintf("no manifest(s) supplied for submission")
+		failureReason := fmt.Sprintf("no file(s) supplied for submission")
 		log.Printf("ERROR: %s", failureReason)
 		_ = recordFailure(dao, wf.SubmissionId, failureReason)
 		logAndPublishFailure(eventBus, busEvent.ClientId, wf.SubmissionId)

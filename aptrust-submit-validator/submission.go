@@ -6,6 +6,7 @@ package main
 
 import (
 	"fmt"
+	"path/filepath"
 	"strings"
 )
 
@@ -16,7 +17,8 @@ func findIncludedManifests(prefix string, suppliedFiles []string) []string {
 	for _, fname := range suppliedFiles {
 
 		// is this a manifest
-		if strings.HasSuffix(fname, manifestName) {
+		basename := filepath.Base(fname)
+		if basename == manifestName {
 			// strip the prefix and the trailing slash character
 			s := strings.TrimPrefix(fname, fmt.Sprintf("%s/", prefix))
 
