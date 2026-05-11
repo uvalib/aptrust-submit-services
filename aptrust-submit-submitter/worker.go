@@ -81,6 +81,8 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 		return
 	}
 
+	log.Printf("INFO: submitting [%s]...", bagFile)
+
 	// upload to the APTrust deposit bucket
 	err = s3Client.s3Put(cfg.APTBucket, bagFile, assetName)
 	if err != nil {
@@ -100,7 +102,7 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 	// remove the leading and trailing quote
 	etag := strings.Trim(*res.ETag, "\"")
 
-	log.Printf("INFO: ETag for [%s] => (%s)", bagFile, etag)
+	log.Printf("INFO: etag for [%s] => (%s)", bagFile, etag)
 
 	// we are done, publish the appropriate event and terminate
 	_ = publishWorkflowEvent(eventBus, uvaaptsbus.EventBagSubmitted, busEvent.ClientId, wf.SubmissionId, wf.BagId, etag)
