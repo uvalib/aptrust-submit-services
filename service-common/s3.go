@@ -19,18 +19,18 @@ import (
 	//"time"
 
 	"github.com/aws/aws-sdk-go-v2/credentials"
+	"github.com/aws/aws-sdk-go-v2/feature/s3/transfermanager"
 
 	//"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
+
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 )
 
 type uvaS3Client struct {
-	client     *s3.Client
-	downloader *manager.Downloader
-	uploader   *manager.Uploader
+	client *s3.Client
+	tm     *transfermanager.Client
 }
 
 func newS3Client(credentials *credentials.StaticCredentialsProvider) (*uvaS3Client, error) {
@@ -46,8 +46,11 @@ func newS3Client(credentials *credentials.StaticCredentialsProvider) (*uvaS3Clie
 
 	c := uvaS3Client{}
 	c.client = s3.NewFromConfig(cfg)
-	c.downloader = manager.NewDownloader(c.client)
-	c.uploader = manager.NewUploader(c.client)
+	c.tm = transfermanager.New(c.client, func(o *transfermanager.Options) {
+		o.PartSizeBytes = 64 * 1024 * 1024
+		o.Concurrency = 8
+	})
+
 	return &c, nil
 }
 
@@ -144,7 +147,7 @@ func (c *uvaS3Client) s3Put(bucket string, key string, location string) error {
 
 	// Upload the file to S3.
 	start := time.Now()
-	_, err = c.uploader.Upload(context.TODO(), &s3.PutObjectInput{
+	_, err = c.tm.UploadObject(context.TODO(), &transfermanager.UploadObjectInput{
 		Bucket: &bucket,
 		Key:    &key,
 		Body:   file,
@@ -170,14 +173,15 @@ func (c *uvaS3Client) s3Get(bucket string, key string, location string) error {
 	defer file.Close()
 
 	start := time.Now()
-	fileSize, err := c.downloader.Download(context.TODO(), file, &s3.GetObjectInput{
-		Bucket: &bucket,
-		Key:    &key,
+	res, err := c.tm.DownloadObject(context.TODO(), &transfermanager.DownloadObjectInput{
+		Bucket:   &bucket,
+		Key:      &key,
+		WriterAt: file,
 	})
 
-	//	if err != nil {
-	//		return err
-	//	}
+	//if err != nil {
+	//	return err
+	//}
 
 	//	// I think there are times when the download runs out of space but it is not reported as an error so
 	//	// we validate the expected file size against the actually downloaded size
@@ -189,7 +193,11 @@ func (c *uvaS3Client) s3Get(bucket string, key string, location string) error {
 	//}
 
 	duration := time.Since(start)
-	log.Printf("INFO: get of %s complete in %0.2f seconds (%d bytes, %0.2f bytes/sec) (%s)", source, duration.Seconds(), fileSize, float64(fileSize)/duration.Seconds(), c.statusText(err))
+	sz := int64(0)
+	if err == nil {
+		sz = *res.ContentLength
+	}
+	log.Printf("INFO: get of %s complete in %0.2f seconds (%d bytes, %0.2f bytes/sec) (%s)", source, duration.Seconds(), sz, float64(sz)/duration.Seconds(), c.statusText(err))
 	return err
 }
 
