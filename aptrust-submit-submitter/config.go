@@ -22,13 +22,6 @@ type ServiceConfig struct {
 	// event bus definitions
 	BusName        string // the event bus name
 	BusEventSource string // the source of published events
-
-	// database configuration
-	//DbHost     string // database host
-	//DbPort     int    // database port
-	//DbName     string // database name
-	//DbUser     string // database user
-	//DbPassword string // database password
 }
 
 // LoadConfiguration will load the service configuration from env/cmdline
@@ -54,13 +47,6 @@ func LoadConfiguration() *ServiceConfig {
 	cfg.BusName = envWithDefault("EVENT_BUS_NAME", "")
 	cfg.BusEventSource = envWithDefault("EVENT_SRC_NAME", "")
 
-	// database definitions
-	//cfg.DbHost = ensureSetAndNonEmpty("DB_HOST")
-	//cfg.DbPort = envToInt("DB_PORT")
-	//cfg.DbName = ensureSetAndNonEmpty("DB_NAME")
-	//cfg.DbUser = ensureSetAndNonEmpty("DB_USER")
-	//cfg.DbPassword = ensureSetAndNonEmpty("DB_PASSWORD")
-
 	// queue definitions
 	log.Printf("[CONFIG] InQueueName     = [%s]", cfg.InQueueName)
 	log.Printf("[CONFIG] PollTimeOut     = [%d]", cfg.PollTimeOut)
@@ -77,13 +63,6 @@ func LoadConfiguration() *ServiceConfig {
 	// event bus definitions
 	log.Printf("[CONFIG] BusName         = [%s]", cfg.BusName)
 	log.Printf("[CONFIG] BusEventSource  = [%s]", cfg.BusEventSource)
-
-	// database definitions
-	//log.Printf("[CONFIG] DbHost          = [%s]", cfg.DbHost)
-	//log.Printf("[CONFIG] DbPort          = [%d]", cfg.DbPort)
-	//log.Printf("[CONFIG] DbName          = [%s]", cfg.DbName)
-	//log.Printf("[CONFIG] DbUser          = [%s]", cfg.DbUser)
-	//log.Printf("[CONFIG] DbPassword      = [REDACTED]")
 
 	return &cfg
 }

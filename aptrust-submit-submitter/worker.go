@@ -40,25 +40,6 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 	// create our event bus client
 	eventBus, _ := NewEventBus(cfg.BusName, cfg.BusEventSource)
 
-	// create the data access object
-	//dao, err := uvaaptsdao.NewDao(cfg.DbHost, cfg.DbPort, cfg.DbUser, cfg.DbPassword, cfg.DbName)
-	//if err != nil {
-	//	log.Printf("ERROR: connecting to the database (%s)", err.Error())
-	//	done <- false
-	//	return
-	//}
-
-	// cleanup on exit
-	//defer dao.Close()
-
-	// get the necessary bag
-	//bag, err := dao.GetBagBySubmissionAndName(wf.SubmissionId, wf.BagId)
-	//if err != nil {
-	//	log.Printf("ERROR: getting bag information (%s)", err.Error())
-	//	done <- false
-	//	return
-	//}
-
 	// assets in <cache root>/<clientId>/<submissionId>/...
 	bagFile := fmt.Sprintf("%s.tar", wf.BagId)
 	assetName := fmt.Sprintf("%s/%s/%s/%s", cfg.LocalAssetCache, busEvent.ClientId, wf.SubmissionId, bagFile)
