@@ -75,7 +75,7 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 		_ = recordFailure(dao, wf.SubmissionId, failureReason)
 		logAndPublishFailure(eventBus, busEvent.ClientId, wf.SubmissionId)
 		duration := time.Since(start)
-		log.Printf("INFO: worker terminating (elapsed %d ms)", duration.Milliseconds())
+		log.Printf("INFO: worker terminating (elapsed %0.2f seconds)", duration.Seconds())
 		done <- true // this is a permanent failure so we do not want to reprocess this message
 		return
 	}
@@ -90,7 +90,7 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 		_ = recordFailure(dao, wf.SubmissionId, failureReason)
 		logAndPublishFailure(eventBus, busEvent.ClientId, wf.SubmissionId)
 		duration := time.Since(start)
-		log.Printf("INFO: worker terminating (elapsed %d ms)", duration.Milliseconds())
+		log.Printf("INFO: worker terminating (elapsed %0.2f seconds)", duration.Seconds())
 		done <- true // this is a permanent failure so we do not want to reprocess this message
 		return
 	}
@@ -105,7 +105,7 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 			_ = recordFailure(dao, wf.SubmissionId, failureReason)
 			logAndPublishFailure(eventBus, busEvent.ClientId, wf.SubmissionId)
 			duration := time.Since(start)
-			log.Printf("INFO: worker terminating (elapsed %d ms)", duration.Milliseconds())
+			log.Printf("INFO: worker terminating (elapsed %0.2f seconds)", duration.Seconds())
 			done <- true // this is a permanent failure so we do not want to reprocess this message
 			return
 		}
@@ -122,7 +122,7 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 		_ = recordFailure(dao, wf.SubmissionId, failureReason)
 		logAndPublishFailure(eventBus, busEvent.ClientId, wf.SubmissionId)
 		duration := time.Since(start)
-		log.Printf("INFO: worker terminating (elapsed %d ms)", duration.Milliseconds())
+		log.Printf("INFO: worker terminating (elapsed %0.2f seconds)", duration.Seconds())
 		done <- true // this is a permanent failure so we do not want to reprocess this message
 		return
 	}
@@ -187,7 +187,7 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 	}
 
 	duration := time.Since(start)
-	log.Printf("INFO: worker terminating (elapsed %d ms)", duration.Milliseconds())
+	log.Printf("INFO: worker terminating (elapsed %0.2f seconds)", duration.Seconds())
 	done <- true
 }
 

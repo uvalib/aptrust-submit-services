@@ -117,7 +117,7 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 	}
 
 	duration := time.Since(start)
-	log.Printf("INFO: worker terminating (elapsed %d ms)", duration.Milliseconds())
+	log.Printf("INFO: worker terminating (elapsed %0.2f seconds)", duration.Seconds())
 	done <- true
 }
 
