@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -86,7 +87,9 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 	log.Printf("INFO: etag for [%s] => (%s)", bagFile, etag)
 
 	// we are done, publish the appropriate event and terminate
-	_ = publishWorkflowEvent(eventBus, uvaaptsbus.EventBagSubmitted, busEvent.ClientId, wf.SubmissionId, wf.BagId, etag)
+	extra := BagSubmittedEventExtraPayload{ETag: etag}
+	e, _ := json.Marshal(extra)
+	_ = publishWorkflowEvent(eventBus, uvaaptsbus.EventBagSubmitted, busEvent.ClientId, wf.SubmissionId, wf.BagId, string(e))
 
 	duration := time.Since(start)
 	log.Printf("INFO: worker terminating (elapsed %0.2f seconds)", duration.Seconds())
