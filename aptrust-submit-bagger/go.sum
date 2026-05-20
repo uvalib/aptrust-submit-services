@@ -48,5 +48,5 @@ github.com/seqsense/s3sync/v2 v2.0.0 h1:13CcC3V4UQuU+iOWF93ylpWUsvjVa5TBNdIYS0uj
 github.com/seqsense/s3sync/v2 v2.0.0/go.mod h1:j2D0lqsKv4VkIJj0utBdc5aOWb8LcK/80RVnvBuGXZI=
 github.com/uvalib/aptrust-submit-bus-definitions/uvaaptsbus v0.0.0-20260427134036-112f80baa79f h1:7w50L6wkc4TWN+mKy95DJtAWGjQWj2ugpdD2gKzUd2g=
 github.com/uvalib/aptrust-submit-bus-definitions/uvaaptsbus v0.0.0-20260427134036-112f80baa79f/go.mod h1:7R2aqbx1YWfJhh3xWuAMvs2YLO2OcZGUmLsqbHMlp4Y=
-github.com/uvalib/aptrust-submit-db-dao/uvaaptsdao v0.0.0-20260511135024-200471e7b048 h1:Iap1A7SJCuxtKLIc/DGmOjUEmMrebGZD4+fyIVdlp2g=
-github.com/uvalib/aptrust-submit-db-dao/uvaaptsdao v0.0.0-20260511135024-200471e7b048/go.mod h1:hjT1AxUZ9UKtAJuSq32WmBrbnne4MzgUFP3jm++gAvM=
+github.com/uvalib/aptrust-submit-db-dao/uvaaptsdao v0.0.0-20260520190604-db827feaab66 h1:L6jz9wGekxE9DSjPIQukUnvCC6ABw+ROjJki2QUbcDI=
+github.com/uvalib/aptrust-submit-db-dao/uvaaptsdao v0.0.0-20260520190604-db827feaab66/go.mod h1:hjT1AxUZ9UKtAJuSq32WmBrbnne4MzgUFP3jm++gAvM=
