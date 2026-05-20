@@ -43,6 +43,11 @@ func ignoreBagAllow(conflictSeries *ConflictSeries) (*ConflictSeries, error) {
 			log.Printf("DEBUG: evaluating <%s:%s> for bag allow", csc.localFile.file.BagName, csc.localFile.file.Name)
 
 			for iy, pc := range csc.possibleConflicts {
+				// no processing required for already ignored conflicting files
+				if pc.ignored == true {
+					continue
+				}
+
 				if inBagAllowList(bagAllowList, pc.file.BagName) == true {
 					log.Printf("INFO: conflict in bag allow/ignore, ignoring <%s:%s>", pc.file.BagName, pc.file.Name)
 					conflictSeries.conflicts[ix].possibleConflicts[iy].ignored = true

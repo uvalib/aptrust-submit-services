@@ -27,6 +27,11 @@ func ignoreBagDuplicates(conflictSeries *ConflictSeries) (*ConflictSeries, error
 		log.Printf("DEBUG: evaluating <%s:%s> for bag duplicates", csc.localFile.file.BagName, csc.localFile.file.Name)
 
 		for iy, pc := range csc.possibleConflicts {
+			// no processing required for already ignored conflicting files
+			if pc.ignored == true {
+				continue
+			}
+
 			if sameBag(csc.localFile.file.BagName, pc.file.BagName) == true {
 				log.Printf("INFO: duplicate hash from duplicate bag, ignoring <%s:%s>", pc.file.BagName, pc.file.Name)
 				conflictSeries.conflicts[ix].possibleConflicts[iy].ignored = true

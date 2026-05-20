@@ -34,7 +34,7 @@ func newConflictSeries(dao *uvaaptsdao.Dao, conflicts []uvaaptsdao.File) (*Confl
 
 		aptConflicts, err := dao.GetAptFilesByHash(conflict.Hash)
 		if err != nil {
-			log.Printf("ERROR: getting APTrust conflicts (%s)", err.Error())
+			log.Printf("ERROR: getting APTrust cache conflicts (%s)", err.Error())
 			return nil, err
 		}
 

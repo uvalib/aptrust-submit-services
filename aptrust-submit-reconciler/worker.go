@@ -92,6 +92,14 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 			return
 		}
 
+		// client specific suppressions... rules can be different for conflict resolution for
+		// different work types (clients)
+		conflictSeries, err = ignoreClientAllow(conflictSeries, busEvent.ClientId)
+		if err != nil {
+			done <- false
+			return
+		}
+
 		//
 		// add more suppressions here
 		//
