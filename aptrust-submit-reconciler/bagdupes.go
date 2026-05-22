@@ -45,7 +45,8 @@ func ignoreBagDuplicates(conflictSeries *ConflictSeries) (*ConflictSeries, error
 // APTrust bag names have the source organization prepended so we look for the local bag name
 // as the suffix
 func sameBag(localBn string, aptBn string) bool {
-	return strings.HasSuffix(aptBn, localBn)
+	//return strings.HasSuffix(aptBn, localBn)
+	return strings.Contains(strings.ToLower(aptBn), strings.ToLower(localBn))
 }
 
 //
