@@ -10,6 +10,9 @@ import (
 	"github.com/uvalib/aptrust-submit-db-dao/uvaaptsdao"
 )
 
+// largest submission, 4TB
+var maxSubmissionSize = uint64(4096 * 1024 * 1024 * 1024)
+
 func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEvent) {
 
 	start := time.Now()
@@ -130,6 +133,7 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 	// for every file in the submission, attempt to match the S3 signature with the one
 	// reported in the submitted manifest...
 	checksumFailures := 0
+	submissionSize := uint64(0)
 	for ix, f := range itemizedFiles {
 		key := fmt.Sprintf("%s/%s/%s", submissionKeyPrefix, f.bag, f.file)
 		log.Printf("DEBUG: validating submission file [%s]...", key)
@@ -143,6 +147,7 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 
 		// update the size
 		itemizedFiles[ix].size = *res.ContentLength
+		submissionSize += uint64(*res.ContentLength)
 
 		// trim leading and trailing quote characters
 		reportedHash := strings.Trim(*res.ETag, "\"")
@@ -160,6 +165,18 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 				checksumFailures++
 			}
 		}
+	}
+
+	// check the submission size
+	if submissionSize > maxSubmissionSize {
+		failureReason := fmt.Sprintf("submission is too large (greater than 4TB)")
+		log.Printf("ERROR: %s", failureReason)
+		_ = recordFailure(dao, wf.SubmissionId, failureReason)
+		logAndPublishFailure(eventBus, busEvent.ClientId, wf.SubmissionId)
+		duration := time.Since(start)
+		log.Printf("INFO: worker terminating (elapsed %0.2f seconds)", duration.Seconds())
+		done <- true // this is a permanent failure so we do not want to reprocess this message
+		return
 	}
 
 	// no checksum failures, lets build the database
