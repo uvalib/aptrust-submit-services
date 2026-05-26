@@ -10,9 +10,6 @@ import (
 	"github.com/uvalib/aptrust-submit-db-dao/uvaaptsdao"
 )
 
-// largest submission, 4TB
-var maxSubmissionSize = uint64(4096 * 1024 * 1024 * 1024)
-
 func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEvent) {
 
 	start := time.Now()
@@ -115,13 +112,14 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 		itemizedFiles = append(itemizedFiles, rows...)
 	}
 
-	log.Printf("INFO: %d files located in the submission", len(suppliedFiles))
-	log.Printf("INFO: %d files enumerated in %d manifests", len(itemizedFiles), len(manifestList))
+	log.Printf("INFO: %d file(s) located in the submission", len(suppliedFiles))
+	log.Printf("INFO: %d file(s) enumerated in %d manifest(s)", len(itemizedFiles), len(manifestList))
 
-	// our enumerated files and the supplied list should be the same size
+	// our enumerated files and the supplied list should match
 	if len(itemizedFiles)+len(manifestList) != len(suppliedFiles) {
-		failureReason := fmt.Sprintf("manifests do not match submission")
+		failureReason := fmt.Sprintf("manifest(s) and file count(s) do not correspond")
 		log.Printf("ERROR: %s", failureReason)
+		enumerateFailure(suppliedFiles, manifestList, itemizedFiles, submissionKeyPrefix)
 		_ = recordFailure(dao, wf.SubmissionId, failureReason)
 		logAndPublishFailure(eventBus, busEvent.ClientId, wf.SubmissionId)
 		duration := time.Since(start)
@@ -133,7 +131,6 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 	// for every file in the submission, attempt to match the S3 signature with the one
 	// reported in the submitted manifest...
 	checksumFailures := 0
-	submissionSize := uint64(0)
 	for ix, f := range itemizedFiles {
 		key := fmt.Sprintf("%s/%s/%s", submissionKeyPrefix, f.bag, f.file)
 		log.Printf("DEBUG: validating submission file [%s]...", key)
@@ -147,7 +144,6 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 
 		// update the size
 		itemizedFiles[ix].size = *res.ContentLength
-		submissionSize += uint64(*res.ContentLength)
 
 		// trim leading and trailing quote characters
 		reportedHash := strings.Trim(*res.ETag, "\"")
@@ -167,9 +163,9 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 		}
 	}
 
-	// check the submission size
-	if submissionSize > maxSubmissionSize {
-		failureReason := fmt.Sprintf("submission is too large (greater than 4TB)")
+	// check the bag size(s)
+	if checksumFailures == 0 && excessiveBagSize(itemizedFiles) == true {
+		failureReason := fmt.Sprintf("one (or more) bag is too large (greater than 4TB)")
 		log.Printf("ERROR: %s", failureReason)
 		_ = recordFailure(dao, wf.SubmissionId, failureReason)
 		logAndPublishFailure(eventBus, busEvent.ClientId, wf.SubmissionId)
