@@ -117,10 +117,7 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 
 	// our enumerated files and the supplied list should match
 	if len(itemizedFiles)+len(manifestList) != len(suppliedFiles) {
-		failureReason := fmt.Sprintf("manifest(s) and file count(s) do not correspond")
-		log.Printf("ERROR: %s", failureReason)
-		enumerateFailure(suppliedFiles, manifestList, itemizedFiles, submissionKeyPrefix)
-		_ = recordFailure(dao, wf.SubmissionId, failureReason)
+		_ = enumerateFailure(dao, wf.SubmissionId, suppliedFiles, manifestList, itemizedFiles, submissionKeyPrefix)
 		logAndPublishFailure(eventBus, busEvent.ClientId, wf.SubmissionId)
 		duration := time.Since(start)
 		log.Printf("INFO: worker terminating (elapsed %0.2f seconds)", duration.Seconds())

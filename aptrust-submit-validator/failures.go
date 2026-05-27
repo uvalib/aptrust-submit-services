@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"path/filepath"
 	"slices"
@@ -9,7 +10,7 @@ import (
 	"github.com/uvalib/aptrust-submit-db-dao/uvaaptsdao"
 )
 
-func enumerateFailure(supplied []string, manifests []string, itemized []ManifestRow, prefix string) {
+func enumerateFailure(dao *uvaaptsdao.Dao, sid string, supplied []string, manifests []string, itemized []ManifestRow, prefix string) error {
 
 	// create a list of strings for the supplied removing the manifest files
 	suppliedList := make([]string, 0)
@@ -36,7 +37,9 @@ func enumerateFailure(supplied []string, manifests []string, itemized []Manifest
 		for _, s := range suppliedList {
 			//log.Printf("INFO: Checking for EXTRA %s", s)
 			if slices.Contains(itemizedList, s) == false {
-				log.Printf("ERROR: %s was supplied but does not appear in a manifest", s)
+				failureReason := fmt.Sprintf("%s was supplied but does not appear in a manifest", s)
+				log.Printf("ERROR: %s", failureReason)
+				_ = recordFailure(dao, sid, failureReason)
 			}
 		}
 	} else {
@@ -44,10 +47,14 @@ func enumerateFailure(supplied []string, manifests []string, itemized []Manifest
 		for _, i := range itemizedList {
 			//log.Printf("INFO: Checking for MISSING %s", i)
 			if slices.Contains(suppliedList, i) == false {
-				log.Printf("ERROR: %s appears in a manifest but was NOT supplied", i)
+				failureReason := fmt.Sprintf("%s appears in a manifest but was NOT supplied", i)
+				log.Printf("ERROR: %s", failureReason)
+				_ = recordFailure(dao, sid, failureReason)
 			}
 		}
 	}
+
+	return nil
 }
 
 func recordFailure(dao *uvaaptsdao.Dao, sid string, reason string) error {
