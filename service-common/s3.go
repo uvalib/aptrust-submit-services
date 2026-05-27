@@ -166,7 +166,7 @@ func (c *uvaS3Client) s3Get(bucket string, key string, location string) error {
 	source := fmt.Sprintf("s3://%s/%s", bucket, key)
 	//log.Printf("INFO: getting %s to %s", source, location)
 
-	file, err := os.OpenFile(location, os.O_RDWR|os.O_CREATE, 0755)
+	file, err := os.OpenFile(location, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
 	if err != nil {
 		return err
 	}
