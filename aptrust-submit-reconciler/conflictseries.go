@@ -23,16 +23,30 @@ type ConflictSeries struct {
 
 // we have a list of files where conflicts exist so now generate a complete list of
 // the conflicts. A file in our conflict list will have one or more conflicts.
-func newConflictSeries(dao *uvaaptsdao.Dao, conflicts []uvaaptsdao.File) (*ConflictSeries, error) {
+func newConflictSeries(dao *uvaaptsdao.Dao, localConflicts []uvaaptsdao.File, aptConflicts []uvaaptsdao.File) (*ConflictSeries, error) {
 
 	res := ConflictSeries{
-		conflicts: make([]ConflictSet, len(conflicts)),
+		conflicts: make([]ConflictSet, len(aptConflicts)),
 		dao:       dao,
 	}
 
-	for ix, conflict := range conflicts {
+	// process the local conflicts
+	for _, conflict := range localConflicts {
+		localConflictFiles, err := dao.GetFilesByHash(conflict.Hash)
+		if err != nil {
+			log.Printf("ERROR: getting local conflicts (%s)", err.Error())
+			return nil, err
+		}
 
-		aptConflicts, err := dao.GetAptFilesByHash(conflict.Hash)
+		// do more here...
+
+		log.Printf("WARNING: ignoring %d local conflict(s) for <%s:%s> (not implemented)", len(localConflictFiles), conflict.BagName, conflict.Name)
+	}
+
+	// process the APTrust conflicts
+	for ix, conflict := range aptConflicts {
+
+		aptConflictFiles, err := dao.GetAptFilesByHash(conflict.Hash)
 		if err != nil {
 			log.Printf("ERROR: getting APTrust cache conflicts (%s)", err.Error())
 			return nil, err
@@ -40,7 +54,7 @@ func newConflictSeries(dao *uvaaptsdao.Dao, conflicts []uvaaptsdao.File) (*Confl
 
 		res.conflicts[ix] = ConflictSet{
 			localFile:         ignorable(conflict),
-			possibleConflicts: makeIgnorable(aptConflicts),
+			possibleConflicts: makeIgnorable(aptConflictFiles),
 		}
 	}
 

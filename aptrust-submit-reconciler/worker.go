@@ -48,22 +48,41 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 	// cleanup on exit
 	defer dao.Close()
 
-	// get all the files from this submission that have hash conflicts
-	filesWithConflicts, err := dao.GetAptHashConflictsBySubmission(wf.SubmissionId)
+	// get all the files from this submission that have hash conflicts with legacy APTrust
+	// submissions
+	filesWithAptConflicts, err := dao.GetAptHashConflictsBySubmission(wf.SubmissionId)
 	if err != nil {
 		if errors.As(err, &uvaaptsdao.ErrFileNotFound) == false {
-			log.Printf("ERROR: getting submission conflict file set (%s)", err.Error())
+			log.Printf("ERROR: getting APTrust submission conflict file set (%s)", err.Error())
 			done <- false
 			return
 		}
+		log.Printf("INFO: no APTrust conflicts identified for submission")
+	} else {
+		log.Printf("INFO: %d possible file(s) with APTrust conflicts", len(filesWithAptConflicts))
+	}
+
+	// get all the files from this submission that have hash conflicts with previous local
+	// submissions
+	filesWithConflicts, err := dao.GetHashConflictsBySubmission(wf.SubmissionId)
+	if err != nil {
+		if errors.As(err, &uvaaptsdao.ErrFileNotFound) == false {
+			log.Printf("ERROR: getting local submission conflict file set (%s)", err.Error())
+			done <- false
+			return
+		}
+		log.Printf("INFO: no local conflicts identified for submission")
+	} else {
+		log.Printf("INFO: %d possible file(s) with local conflicts", len(filesWithConflicts))
 	}
 
 	// if we have files with conflicts
-	if len(filesWithConflicts) > 0 {
-		log.Printf("INFO: %d possible file(s) with conflicts", len(filesWithConflicts))
+	conflictCount := len(filesWithAptConflicts) + len(filesWithConflicts)
+	if conflictCount > 0 {
+		log.Printf("INFO: %d possible file(s) with conflicts", conflictCount)
 
 		// generate the conflict series
-		conflictSeries, err := newConflictSeries(dao, filesWithConflicts)
+		conflictSeries, err := newConflictSeries(dao, filesWithConflicts, filesWithAptConflicts)
 		if err != nil {
 			done <- false
 			return
