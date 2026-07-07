@@ -54,6 +54,14 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 		return
 	}
 
+	// update the submission state to reflect that we are now validating it
+	err = dao.UpdateSubmissionState(wf.SubmissionId, uvaaptsdao.SubmissionStatusValidating)
+	if err != nil {
+		log.Printf("ERROR: updating submission state (%s)", err.Error())
+		done <- false
+		return
+	}
+
 	// create our event bus client
 	eventBus, _ := NewEventBus(cfg.BusName, cfg.BusEventSource)
 
@@ -73,7 +81,7 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 		failureReason := fmt.Sprintf("no file(s) supplied for submission")
 		log.Printf("ERROR: %s", failureReason)
 		_ = recordFailure(dao, wf.SubmissionId, failureReason)
-		logAndPublishFailure(eventBus, busEvent.ClientId, wf.SubmissionId)
+		_ = postFailureCleanup(dao, eventBus, busEvent.ClientId, wf.SubmissionId)
 		duration := time.Since(start)
 		log.Printf("INFO: worker terminating (elapsed %0.2f seconds)", duration.Seconds())
 		done <- true // this is a permanent failure so we do not want to reprocess this message
@@ -88,7 +96,7 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 		failureReason := fmt.Sprintf("no manifest(s) supplied for submission")
 		log.Printf("ERROR: %s", failureReason)
 		_ = recordFailure(dao, wf.SubmissionId, failureReason)
-		logAndPublishFailure(eventBus, busEvent.ClientId, wf.SubmissionId)
+		_ = postFailureCleanup(dao, eventBus, busEvent.ClientId, wf.SubmissionId)
 		duration := time.Since(start)
 		log.Printf("INFO: worker terminating (elapsed %0.2f seconds)", duration.Seconds())
 		done <- true // this is a permanent failure so we do not want to reprocess this message
@@ -103,7 +111,7 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 			failureReason := fmt.Sprintf("manifest %s is bad or missing", manifest)
 			log.Printf("ERROR: %s", failureReason)
 			_ = recordFailure(dao, wf.SubmissionId, failureReason)
-			logAndPublishFailure(eventBus, busEvent.ClientId, wf.SubmissionId)
+			_ = postFailureCleanup(dao, eventBus, busEvent.ClientId, wf.SubmissionId)
 			duration := time.Since(start)
 			log.Printf("INFO: worker terminating (elapsed %0.2f seconds)", duration.Seconds())
 			done <- true // this is a permanent failure so we do not want to reprocess this message
@@ -118,7 +126,7 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 	// our enumerated files and the supplied list should match
 	if len(itemizedFiles)+len(manifestList) != len(suppliedFiles) {
 		_ = enumerateFailure(dao, wf.SubmissionId, suppliedFiles, manifestList, itemizedFiles, submissionKeyPrefix)
-		logAndPublishFailure(eventBus, busEvent.ClientId, wf.SubmissionId)
+		_ = postFailureCleanup(dao, eventBus, busEvent.ClientId, wf.SubmissionId)
 		duration := time.Since(start)
 		log.Printf("INFO: worker terminating (elapsed %0.2f seconds)", duration.Seconds())
 		done <- true // this is a permanent failure so we do not want to reprocess this message
@@ -165,7 +173,7 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 		failureReason := fmt.Sprintf("one (or more) bag is too large (greater than 4TB)")
 		log.Printf("ERROR: %s", failureReason)
 		_ = recordFailure(dao, wf.SubmissionId, failureReason)
-		logAndPublishFailure(eventBus, busEvent.ClientId, wf.SubmissionId)
+		_ = postFailureCleanup(dao, eventBus, busEvent.ClientId, wf.SubmissionId)
 		duration := time.Since(start)
 		log.Printf("INFO: worker terminating (elapsed %0.2f seconds)", duration.Seconds())
 		done <- true // this is a permanent failure so we do not want to reprocess this message
@@ -193,7 +201,7 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 		log.Printf("INFO: no problems found for submission [%s]", wf.SubmissionId)
 		_ = publishWorkflowEvent(eventBus, uvaaptsbus.EventSubmissionReconcile, busEvent.ClientId, wf.SubmissionId, wf.BagId, "")
 	} else {
-		logAndPublishFailure(eventBus, busEvent.ClientId, wf.SubmissionId)
+		_ = postFailureCleanup(dao, eventBus, busEvent.ClientId, wf.SubmissionId)
 	}
 
 	duration := time.Since(start)
@@ -201,9 +209,17 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 	done <- true
 }
 
-func logAndPublishFailure(eventBus uvaaptsbus.UvaBus, cid string, sid string) {
+func postFailureCleanup(dao *uvaaptsdao.Dao, eventBus uvaaptsbus.UvaBus, cid string, sid string) error {
 	log.Printf("WARNING: submission [%s] FAILS validation", sid)
+
+	// update the submission state to reflect that validation failed
+	err := dao.UpdateSubmissionState(sid, uvaaptsdao.SubmissionStatusError)
+	if err != nil {
+		log.Printf("ERROR: updating submission state (%s)", err.Error())
+	}
+
 	_ = publishWorkflowEvent(eventBus, uvaaptsbus.EventSubmissionValidateFail, cid, sid, "", "")
+	return err
 }
 
 //
