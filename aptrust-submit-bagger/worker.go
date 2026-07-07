@@ -96,6 +96,14 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 		return
 	}
 
+	// update the bag status to reflect we are done
+	err = dao.UpdateBagState(wf.BagId, wf.SubmissionId, uvaaptsdao.BagStatusReady)
+	if err != nil {
+		log.Printf("ERROR: updating bag state (%s)", err.Error())
+		done <- false
+		return
+	}
+
 	// we are done, publish the appropriate event and terminate
 	_ = publishWorkflowEvent(eventBus, uvaaptsbus.EventBagBuilt, busEvent.ClientId, wf.SubmissionId, wf.BagId, "")
 
