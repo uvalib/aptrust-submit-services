@@ -133,6 +133,28 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 		return
 	}
 
+	// for every file in the submission, validate the filename to ensure it follows the
+	// rules for APTrust ingest
+	filenameFailures := 0
+	for _, f := range itemizedFiles {
+		if validFileName(f.file) == false {
+			failureReason := fmt.Sprintf("filename [%s] from bag [%s] is not valid", f.file, f.bag)
+			log.Printf("ERROR: %s", failureReason)
+			_ = recordFailure(dao, wf.SubmissionId, failureReason)
+			filenameFailures++
+		}
+	}
+
+	// did we have filename failures
+	if filenameFailures != 0 {
+		// we have already recorded the failures so just need to cleanup
+		_ = postFailureCleanup(dao, eventBus, busEvent.ClientId, wf.SubmissionId)
+		duration := time.Since(start)
+		log.Printf("INFO: worker terminating (elapsed %0.2f seconds)", duration.Seconds())
+		done <- true // this is a permanent failure so we do not want to reprocess this message
+		return
+	}
+
 	// for every file in the submission, attempt to match the S3 signature with the one
 	// reported in the submitted manifest...
 	checksumFailures := 0
@@ -168,8 +190,18 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 		}
 	}
 
+	// did we have checksum failures
+	if checksumFailures != 0 {
+		// we have already recorded the failures so just need to cleanup
+		_ = postFailureCleanup(dao, eventBus, busEvent.ClientId, wf.SubmissionId)
+		duration := time.Since(start)
+		log.Printf("INFO: worker terminating (elapsed %0.2f seconds)", duration.Seconds())
+		done <- true // this is a permanent failure so we do not want to reprocess this message
+		return
+	}
+
 	// check the bag size(s)
-	if checksumFailures == 0 && excessiveBagSize(itemizedFiles) == true {
+	if excessiveBagSize(itemizedFiles) == true {
 		failureReason := fmt.Sprintf("one (or more) bag is too large (greater than 4TB)")
 		log.Printf("ERROR: %s", failureReason)
 		_ = recordFailure(dao, wf.SubmissionId, failureReason)
@@ -180,29 +212,23 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 		return
 	}
 
-	// no checksum failures, lets build the database
-	if checksumFailures == 0 {
-
-		// create the bags
-		err = createDBBags(dao, manifestList, wf.SubmissionId)
-		if err != nil {
-			done <- false
-			return
-		}
-
-		// create the files
-		err = createDBFiles(dao, itemizedFiles, wf.SubmissionId)
-		if err != nil {
-			done <- false
-			return
-		}
-
-		// we are done, publish the appropriate event and terminate
-		log.Printf("INFO: no problems found for submission [%s]", wf.SubmissionId)
-		_ = publishWorkflowEvent(eventBus, uvaaptsbus.EventSubmissionReconcile, busEvent.ClientId, wf.SubmissionId, wf.BagId, "")
-	} else {
-		_ = postFailureCleanup(dao, eventBus, busEvent.ClientId, wf.SubmissionId)
+	// create the bags
+	err = createDBBags(dao, manifestList, wf.SubmissionId)
+	if err != nil {
+		done <- false
+		return
 	}
+
+	// create the files
+	err = createDBFiles(dao, itemizedFiles, wf.SubmissionId)
+	if err != nil {
+		done <- false
+		return
+	}
+
+	// we are done, publish the appropriate event and terminate
+	log.Printf("INFO: no problems found for submission [%s]", wf.SubmissionId)
+	_ = publishWorkflowEvent(eventBus, uvaaptsbus.EventSubmissionReconcile, busEvent.ClientId, wf.SubmissionId, wf.BagId, "")
 
 	duration := time.Since(start)
 	log.Printf("INFO: worker terminating (elapsed %0.2f seconds)", duration.Seconds())
