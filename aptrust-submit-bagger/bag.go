@@ -97,13 +97,16 @@ func updateManifest(root string, filename string) error {
 
 	newContents := ""
 	for _, line := range contents {
-		if len(line) == 0 {
+		// ignore blank lines, including those with a trailing CR from CRLF line endings
+		if len(strings.TrimSpace(line)) == 0 {
 			continue
 		}
 		tok := strings.SplitN(line, " ", 2)
 		if len(tok) == 2 {
-			fp := tok[0]
-			file := strings.Trim(tok[1], " ")
+			// parse the same way as the validator does; TrimSpace also removes the CR from
+			// CRLF line endings
+			fp := strings.ToLower(strings.TrimSpace(tok[0]))
+			file := strings.TrimSpace(tok[1])
 
 			// does this file belong in the manifest
 			if keepInManifest(file) == true {

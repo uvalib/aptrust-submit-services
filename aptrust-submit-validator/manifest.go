@@ -48,7 +48,8 @@ func manifestContents(s3client *uvaS3Client, bucket string, prefix string, manif
 		}
 		subs := strings.SplitN(line, " ", 2)
 		if len(subs) == 2 {
-			hash := strings.TrimSpace(subs[0])
+			// normalize the hash, S3 ETags and the APTrust hashes are lowercase
+			hash := strings.ToLower(strings.TrimSpace(subs[0]))
 			name := strings.TrimSpace(subs[1])
 			ml := ManifestRow{hash: hash, file: name, bag: bag}
 			results = append(results, ml)
