@@ -222,14 +222,13 @@ func keepInManifest(filename string) bool {
 
 // provide md5 fingerprint of the specified file
 func md5Checksum(filename string) (string, error) {
-	_, err := os.Stat(filename)
-	if err == nil {
-		data, _ := os.ReadFile(filename)
-		res := fmt.Sprintf("%x", md5.Sum(data))
-		return res, nil
+	data, err := os.ReadFile(filename)
+	if err != nil {
+		log.Printf("ERROR: [%s] does not exist or is not readable (%s)", filename, err.Error())
+		return "", err
 	}
-	log.Printf("ERROR: [%s] does not exist or is not readable", filename)
-	return "", err
+	res := fmt.Sprintf("%x", md5.Sum(data))
+	return res, nil
 }
 
 // read the specified file into a slice of strings, contents separated by newlines
