@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/md5"
 	"embed"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -176,6 +177,11 @@ func makeTarfile(root string, bagname string, outfile string) error {
 	if err != nil {
 		log.Printf("ERROR: creating tarfile (%s)", err.Error())
 		log.Printf("INFO: command output [%s]", string(res))
+		// stdout is just the verbose file list, the actual error is reported on stderr
+		var exitErr *exec.ExitError
+		if errors.As(err, &exitErr) == true {
+			log.Printf("ERROR: command error output [%s]", string(exitErr.Stderr))
+		}
 	}
 	duration := time.Since(start)
 	log.Printf("INFO: tar completed (elapsed %0.2f seconds)", duration.Seconds())
