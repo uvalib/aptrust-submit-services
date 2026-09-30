@@ -29,8 +29,8 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 	// make the workflow event
 	wf, err := uvaaptsbus.MakeWorkflowEvent(busEvent.Detail)
 	if err != nil {
-		log.Printf("ERROR: unmarshaling workflow event (%s)", err.Error())
-		done <- false
+		log.Printf("ERROR: unmarshaling workflow event (%s), discarding", err.Error())
+		done <- true // this will never succeed so we do not want to reprocess this message
 		return
 	}
 
