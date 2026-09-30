@@ -3,58 +3,57 @@ package main
 import (
 	"fmt"
 	"log"
-	"path/filepath"
 	"slices"
 	"strings"
 
 	"github.com/uvalib/aptrust-submit-db-dao/uvaaptsdao"
 )
 
-func enumerateFailure(dao *uvaaptsdao.Dao, sid string, supplied []string, manifests []string, itemized []ManifestRow, prefix string) error {
+// ensure the files supplied and the files itemized in the manifest(s) match exactly, recording a
+// failure for each discrepancy. Returns the number of failures recorded
+func enumerationFailures(dao *uvaaptsdao.Dao, sid string, supplied []string, manifests []string, itemized []ManifestRow, prefix string) int {
 
-	// create a list of strings for the supplied removing the manifest files
-	suppliedList := make([]string, 0)
+	failures := 0
+
+	// the set of supplied files (relative to the submission), excluding the manifest files
+	suppliedSet := make(map[string]bool)
 	for _, s := range supplied {
-		fn := strings.TrimPrefix(s, prefix+string(filepath.Separator))
+		fn := strings.TrimPrefix(s, prefix+"/")
 		if slices.Contains(manifests, fn) == false {
-			//log.Printf("INFO: supplied %s", fn)
-			suppliedList = append(suppliedList, fn)
+			suppliedSet[fn] = true
 		}
 	}
 
-	// create a list of strings for the itemized
-	itemizedList := make([]string, 0)
+	// go through the items specified and log each one that was not supplied or is duplicated.
+	// named the same way as the S3 key so the comparison is exact
+	itemizedSet := make(map[string]bool)
 	for _, i := range itemized {
-		fn := filepath.Join(i.bag, i.file)
-		//log.Printf("INFO: itemized %s", fn)
-		itemizedList = append(itemizedList, fn)
-	}
-
-	// if the manifests specified fewer files than were actually supplied
-	if len(itemizedList)+len(manifests) < len(suppliedList) {
-
-		// go through the files supplied and log each one that was not included in the manifest(s)
-		for _, s := range suppliedList {
-			//log.Printf("INFO: Checking for EXTRA %s", s)
-			if slices.Contains(itemizedList, s) == false {
-				failureReason := fmt.Sprintf("%s was supplied but does not appear in a manifest", s)
-				log.Printf("ERROR: %s", failureReason)
-				_ = recordFailure(dao, sid, failureReason)
-			}
+		fn := fmt.Sprintf("%s/%s", i.bag, i.file)
+		if itemizedSet[fn] == true {
+			failures += recordEnumerationFailure(dao, sid, fmt.Sprintf("%s appears more than once in a manifest", fn))
+			continue
 		}
-	} else {
-		// go through the items specified and log each one that was not supplied
-		for _, i := range itemizedList {
-			//log.Printf("INFO: Checking for MISSING %s", i)
-			if slices.Contains(suppliedList, i) == false {
-				failureReason := fmt.Sprintf("%s appears in a manifest but was NOT supplied", i)
-				log.Printf("ERROR: %s", failureReason)
-				_ = recordFailure(dao, sid, failureReason)
-			}
+		itemizedSet[fn] = true
+		if suppliedSet[fn] == false {
+			failures += recordEnumerationFailure(dao, sid, fmt.Sprintf("%s appears in a manifest but was NOT supplied", fn))
 		}
 	}
 
-	return nil
+	// go through the files supplied and log each one that was not included in the manifest(s)
+	for _, s := range supplied {
+		fn := strings.TrimPrefix(s, prefix+"/")
+		if suppliedSet[fn] == true && itemizedSet[fn] == false {
+			failures += recordEnumerationFailure(dao, sid, fmt.Sprintf("%s was supplied but does not appear in a manifest", fn))
+		}
+	}
+
+	return failures
+}
+
+func recordEnumerationFailure(dao *uvaaptsdao.Dao, sid string, reason string) int {
+	log.Printf("ERROR: %s", reason)
+	_ = recordFailure(dao, sid, reason)
+	return 1
 }
 
 func recordFailure(dao *uvaaptsdao.Dao, sid string, reason string) error {

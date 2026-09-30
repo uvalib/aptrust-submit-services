@@ -1,11 +1,13 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"strings"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/uvalib/aptrust-submit-bus-definitions/uvaaptsbus"
 	"github.com/uvalib/aptrust-submit-db-dao/uvaaptsdao"
 )
@@ -124,9 +126,9 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 	log.Printf("INFO: %d file(s) located in the submission", len(suppliedFiles))
 	log.Printf("INFO: %d file(s) enumerated in %d manifest(s)", len(itemizedFiles), len(manifestList))
 
-	// our enumerated files and the supplied list should match
-	if len(itemizedFiles)+len(manifestList) != len(suppliedFiles) {
-		_ = enumerateFailure(dao, wf.SubmissionId, suppliedFiles, manifestList, itemizedFiles, submissionKeyPrefix)
+	// our enumerated files and the supplied list should match exactly
+	if enumerationFailures(dao, wf.SubmissionId, suppliedFiles, manifestList, itemizedFiles, submissionKeyPrefix) != 0 {
+		// we have already recorded the failures so just need to cleanup
 		_ = postFailureCleanup(dao, eventBus, busEvent.ClientId, wf.SubmissionId)
 		duration := time.Since(start)
 		log.Printf("INFO: worker terminating (elapsed %0.2f seconds)", duration.Seconds())
@@ -165,6 +167,16 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 
 		res, err := s3Client.s3Head(cfg.InboundBucket, key)
 		if err != nil {
+			// the file was in the listing so this is unlikely unless it has since been removed. It is
+			// a permanent failure so record it rather than reprocessing the message
+			var notFound *types.NotFound
+			if errors.As(err, &notFound) == true {
+				failureReason := fmt.Sprintf("[%s] not found", key)
+				log.Printf("ERROR: %s", failureReason)
+				_ = recordFailure(dao, wf.SubmissionId, failureReason)
+				checksumFailures++
+				continue
+			}
 			log.Printf("ERROR: getting attributes for [%s] (%s)", key, err.Error())
 			done <- false
 			return
