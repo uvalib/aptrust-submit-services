@@ -21,7 +21,7 @@ func ignoreBagAllow(conflictSeries *ConflictSeries) (*ConflictSeries, error) {
 	// get our bag allow list set
 	bagAllowList, err := conflictSeries.dao.GetBagAllowList()
 	if err != nil {
-		if errors.As(err, &uvaaptsdao.ErrBagNotFound) == false {
+		if errors.Is(err, uvaaptsdao.ErrBagNotFound) == false {
 			log.Printf("ERROR: getting bag allow list (%s)", err.Error())
 			return nil, err
 		}

@@ -52,7 +52,7 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 	// submissions
 	filesWithAptConflicts, err := dao.GetAptHashConflictsBySubmission(wf.SubmissionId)
 	if err != nil {
-		if errors.As(err, &uvaaptsdao.ErrFileNotFound) == false {
+		if errors.Is(err, uvaaptsdao.ErrFileNotFound) == false {
 			log.Printf("ERROR: getting APTrust submission conflict file set (%s)", err.Error())
 			done <- false
 			return
@@ -66,7 +66,7 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 	// submissions
 	filesWithConflicts, err := dao.GetHashConflictsBySubmission(wf.SubmissionId)
 	if err != nil {
-		if errors.As(err, &uvaaptsdao.ErrFileNotFound) == false {
+		if errors.Is(err, uvaaptsdao.ErrFileNotFound) == false {
 			log.Printf("ERROR: getting local submission conflict file set (%s)", err.Error())
 			done <- false
 			return

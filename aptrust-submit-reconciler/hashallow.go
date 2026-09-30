@@ -21,7 +21,7 @@ func ignoreHashAllow(conflictSeries *ConflictSeries) (*ConflictSeries, error) {
 	// get our hash allow list set
 	hashAllowList, err := conflictSeries.dao.GetHashAllowList()
 	if err != nil {
-		if errors.As(err, &uvaaptsdao.ErrFileNotFound) == false {
+		if errors.Is(err, uvaaptsdao.ErrFileNotFound) == false {
 			log.Printf("ERROR: getting hash allow list (%s)", err.Error())
 			return nil, err
 		}
