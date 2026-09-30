@@ -69,7 +69,8 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 	submissionKeyPrefix := fmt.Sprintf("%s/%s", busEvent.ClientId, wf.SubmissionId)
 
 	// get a complete list of all the files included in the specified submission
-	suppliedFiles, err := s3Client.s3List(cfg.InboundBucket, submissionKeyPrefix)
+	// the trailing slash is required, S3 matches on a prefix so without it submission "foo" would also include "foo2/..."
+	suppliedFiles, err := s3Client.s3List(cfg.InboundBucket, submissionKeyPrefix+"/")
 	if err != nil {
 		log.Printf("ERROR: listing submission assets (%s)", err.Error())
 		done <- false

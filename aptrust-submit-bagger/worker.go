@@ -60,7 +60,8 @@ func worker(done chan<- bool, cfg *ServiceConfig, busEvent *uvaaptsbus.UvaBusEve
 	}
 
 	// S3 assets in <bucket>/<clientId>/<submissionId>/<bag name>/...
-	bagKey := fmt.Sprintf("%s/%s/%s", busEvent.ClientId, wf.SubmissionId, wf.BagId)
+	// the trailing slash is required, S3 matches on a prefix so without it bag "foo" would also include "foo2/..."
+	bagKey := fmt.Sprintf("%s/%s/%s/", busEvent.ClientId, wf.SubmissionId, wf.BagId)
 
 	// local assets in <cache root>/<clientId>/<submissionId>/<bag name>/...
 	localSubmissionRoot := fmt.Sprintf("%s/%s/%s", cfg.LocalAssetCache, busEvent.ClientId, wf.SubmissionId)
